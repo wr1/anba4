@@ -35,6 +35,7 @@ from ..data_model import AnbaData
 def stress_field(
     data: AnbaData, force, moment, reference="local", voigt_convention="anba"
 ):
+    singular = data.input_data.singular
     if reference == "local":
         stress_comp = lambda u, up: RotatedSigma(data, u, up)
     elif reference == "global":
@@ -74,8 +75,12 @@ def stress_field(
 
     ksp.solve(AzInt, eigensol_magnitudes)
 
-    UL = Function(data.fe_functions.UF3R4)
-    ULP = Function(data.fe_functions.UF3R4)
+    if singular:
+        UL = data.fe_functions.U
+        ULP = data.fe_functions.UP
+    else:
+        UL = Function(data.fe_functions.UF3R4)
+        ULP = Function(data.fe_functions.UF3R4)
     UL.vector()[:] = 0.0
     ULP.vector()[:] = 0.0
     row = -1
@@ -89,8 +94,8 @@ def stress_field(
             ULP.vector()[:] += (
                 data.chains.chains[i][ll - 1 - k].vector() * eigensol_magnitudes[row]
             )
-    (U, L) = split(UL)
-    (UP, LP) = split(ULP)
+    (U, L) = split(UL) if not singular else (UL, None)
+    (UP, LP) = split(ULP) if not singular else (ULP, None)
     stress = local_project(
         vector_conversion(stress_comp(U, UP)), data.fe_functions.STRESS_FS
     )

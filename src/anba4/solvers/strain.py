@@ -35,6 +35,7 @@ from ..data_model import AnbaData
 def strain_field(
     data: AnbaData, force, moment, reference="local", voigt_convention="anba"
 ):
+    singular = data.input_data.singular
     if reference == "local":
         strain_comp = lambda u, up: rotated_epsilon(data, u, up)
     elif reference == "global":
@@ -74,8 +75,12 @@ def strain_field(
 
     ksp.solve(AzInt, eigensol_magnitudes)
 
-    UL = Function(data.fe_functions.UF3R4)
-    ULP = Function(data.fe_functions.UF3R4)
+    if singular:
+        UL = data.fe_functions.U
+        ULP = data.fe_functions.UP
+    else:
+        UL = Function(data.fe_functions.UF3R4)
+        ULP = Function(data.fe_functions.UF3R4)
     UL.vector()[:] = 0.0
     ULP.vector()[:] = 0.0
     row = -1
@@ -89,8 +94,8 @@ def strain_field(
             ULP.vector()[:] += (
                 data.chains.chains[i][ll - 1 - k].vector() * eigensol_magnitudes[row]
             )
-    (U, L) = split(UL)
-    (UP, LP) = split(ULP)
+    (U, L) = split(UL) if not singular else (UL, None)
+    (UP, LP) = split(ULP) if not singular else (ULP, None)
     strain = local_project(
         vector_conversion(strain_comp(U, UP)), data.fe_functions.STRESS_FS
     )

@@ -34,6 +34,7 @@ from dolfin import (
     sqrt,
     solve,
     as_backend_type,
+    PETScKrylovSolver,
 )
 from petsc4py import PETSc
 
@@ -46,7 +47,21 @@ from ..data_model import AnbaData
 
 
 def compute_stiffness(data: AnbaData) -> Any:
-    stress = Sigma(data, data.fe_functions.U, data.fe_functions.UP)
+    singular = data.input_data.singular
+    if singular:
+        U = data.fe_functions.U
+        UP = data.fe_functions.UP
+        UV = data.fe_functions.UV
+        UT = data.fe_functions.UT
+    else:
+        U = data.fe_functions.U
+        UP = data.fe_functions.UP
+        UV = data.fe_functions.UV
+        UT = data.fe_functions.UT
+        LV = data.fe_functions.LV
+        LT = data.fe_functions.LT
+
+    stress = Sigma(data, U, UP)
     stress_n = stress[:, 2]
     stress_1 = stress[:, 0]
     stress_2 = stress[:, 1]
@@ -58,89 +73,54 @@ def compute_stiffness(data: AnbaData) -> Any:
         ]
     )
 
-    ES = derivative(stress, data.fe_functions.U, data.fe_functions.UT)
-    ES_t = derivative(stress_s, data.fe_functions.U, data.fe_functions.UT)
-    ES_n = derivative(stress_s, data.fe_functions.UP, data.fe_functions.UT)
-    En_t = derivative(stress_n, data.fe_functions.U, data.fe_functions.UT)
-    En_n = derivative(stress_n, data.fe_functions.UP, data.fe_functions.UT)
+    ES = derivative(stress, U, UT)
+    ES_t = derivative(stress_s, U, UT)
+    ES_n = derivative(stress_s, UP, UT)
+    En_t = derivative(stress_n, U, UT)
+    En_n = derivative(stress_n, UP, UT)
 
-    Mf = inner(data.fe_functions.UV, En_n) * dx
+    Mf = inner(UV, En_n) * dx
     M = assemble(Mf)
     data.output_data.M = M
 
-    Cf = inner(grad(data.fe_functions.UV), ES_n) * dx
+    Cf = inner(grad(UV), ES_n) * dx
     C = assemble(Cf)
-    Hf = (
-        inner(grad(data.fe_functions.UV), ES_n) - inner(data.fe_functions.UV, En_t)
-    ) * dx
+    Hf = (inner(grad(UV), ES_n) - inner(UV, En_t)) * dx
     H = assemble(Hf)
     data.output_data.H = H
 
-    # the four initial solutions
+    if singular:
+        Ef = inner(grad(UV), ES_t) * dx
+        E = assemble(Ef)
+        data.output_data.E = E
 
-    Escal = Constant(data.input_data.scaling_constraint)
-    Ef = inner(grad(data.fe_functions.UV), ES_t) * dx
-    Ef += (
-        (
-            data.fe_functions.LV[0] * data.fe_functions.UT[0]
-            + data.fe_functions.LV[1] * data.fe_functions.UT[1]
-            + data.fe_functions.LV[2] * data.fe_functions.UT[2]
-        )
-        * Escal
-        * dx
-    )
-    Ef += (
-        data.fe_functions.LV[3]
-        * dot(data.fe_functions.UT, data.chains.chains_d[1][0])
-        * Escal
-        * dx
-    )
-    Ef += (
-        (
-            data.fe_functions.UV[0] * data.fe_functions.LT[0]
-            + data.fe_functions.UV[1] * data.fe_functions.LT[1]
-            + data.fe_functions.UV[2] * data.fe_functions.LT[2]
-        )
-        * Escal
-        * dx
-    )
-    Ef += (
-        data.fe_functions.LT[3]
-        * dot(data.fe_functions.UV, data.chains.chains_d[1][0])
-        * Escal
-        * dx
-    )
-    E = assemble(Ef)
-    data.output_data.E = E
+        solver = PETScKrylovSolver("cg")
+        solver.parameters["relative_tolerance"] = 1.0e-10
+        solver.parameters["absolute_tolerance"] = 1.0e-16
+        solver.parameters["convergence_norm_type"] = "natural"
+        solver.set_operator(E)
+        as_backend_type(E).set_nullspace(data.output_data.null_space)
+    else:
+        Escal = Constant(data.input_data.scaling_constraint)
+        Ef = inner(grad(UV), ES_t) * dx
+        Ef += (LV[0] * UT[0] + LV[1] * UT[1] + LV[2] * UT[2]) * Escal * dx
+        Ef += LV[3] * dot(UT, data.chains.chains_d[1][0]) * Escal * dx
+        Ef += (UV[0] * LT[0] + UV[1] * LT[1] + UV[2] * LT[2]) * Escal * dx
+        Ef += LT[3] * dot(UV, data.chains.chains_d[1][0]) * Escal * dx
+        E = assemble(Ef)
+        data.output_data.E = E
+
     S = (
         dot(stress_n, data.fe_functions.RV3F) * dx
         + dot(cross(pos3d(data.fe_functions.POS), stress_n), data.fe_functions.RV3M)
         * dx
     )
-    L_res_f = derivative(S, data.fe_functions.UP, data.fe_functions.UT)
+    L_res_f = derivative(S, UP, UT)
     data.output_data.L_res = assemble(L_res_f)
-    R_res_f = derivative(S, data.fe_functions.U, data.fe_functions.UT)
+    R_res_f = derivative(S, U, UT)
     data.output_data.R_res = assemble(R_res_f)
 
     maxres = 0.0
-    for i in range(4):
-        tmp = E * data.chains.chains[i][0].vector()
-        maxres = max(maxres, sqrt(tmp.inner(tmp)))
-    for i in [2, 3]:
-        tmp = -(H * data.chains.chains[i][0].vector()) - (
-            E * data.chains.chains[i][1].vector()
-        )
-        maxres = max(maxres, sqrt(tmp.inner(tmp)))
-
-    #        if maxres > 1.E-16:
-    #            scaling_factor = 1.E-16 / maxres;
-    #        else:
-    #            scaling_factor = 1.
-
-    #        for i in range(4):
-    #            data.chains.chains[i][0].vector()[:] = data.chains.chains[i][0].vector() * scaling_factor
-    #        for i in [2, 3]:
-    #            data.chains.chains[i][1].vector()[:] = data.chains.chains[i][1].vector() * scaling_factor
     for i in range(4):
         tmp = E * data.chains.chains[i][0].vector()
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
@@ -154,30 +134,36 @@ def compute_stiffness(data: AnbaData) -> Any:
     for i in range(2):
         rhs = -(H * data.chains.chains[i][0].vector())
         data.output_data.null_space.orthogonalize(rhs)
-        solve(E, data.chains.chains[i][1].vector(), rhs)
+        if singular:
+            solver.solve(data.chains.chains[i][1].vector(), rhs)
+        else:
+            solve(E, data.chains.chains[i][1].vector(), rhs)
         data.output_data.null_space.orthogonalize(data.chains.chains[i][1].vector())
 
     # solve E d2 = M d0 - H d1
     for i in [2, 3]:
         rhs = -(H * data.chains.chains[i][1].vector()) + (
-            data.output_data.M * data.chains.chains[i][0].vector()
+            M * data.chains.chains[i][0].vector()
         )
         data.output_data.null_space.orthogonalize(rhs)
-        solve(E, data.chains.chains[i][2].vector(), rhs)
+        if singular:
+            solver.solve(data.chains.chains[i][2].vector(), rhs)
+        else:
+            solve(E, data.chains.chains[i][2].vector(), rhs)
         data.output_data.null_space.orthogonalize(data.chains.chains[i][2].vector())
 
     a = np.zeros((2, 2))
     b = np.zeros((2, 1))
     for i in [2, 3]:
         res = -(H * data.chains.chains[i][2].vector()) + (
-            data.output_data.M * data.chains.chains[i][1].vector()
+            M * data.chains.chains[i][1].vector()
         )
         for k in range(2):
             b[k] = res.inner(data.chains.chains[k][0].vector())
             for ii in range(2):
                 a[k, ii] = (
                     -(H * data.chains.chains[ii][1].vector())
-                    + (data.output_data.M * data.chains.chains[ii][0].vector())
+                    + (M * data.chains.chains[ii][0].vector())
                 ).inner(data.chains.chains[k][0].vector())
         x = np.linalg.solve(a, b)
         for ii in range(2):
@@ -190,10 +176,13 @@ def compute_stiffness(data: AnbaData) -> Any:
 
     for i in [2, 3]:
         rhs = -(H * data.chains.chains[i][2].vector()) + (
-            data.output_data.M * data.chains.chains[i][1].vector()
+            M * data.chains.chains[i][1].vector()
         )
         data.output_data.null_space.orthogonalize(rhs)
-        solve(E, data.chains.chains[i][3].vector(), rhs)
+        if singular:
+            solver.solve(data.chains.chains[i][3].vector(), rhs)
+        else:
+            solve(E, data.chains.chains[i][3].vector(), rhs)
         data.output_data.null_space.orthogonalize(data.chains.chains[i][3].vector())
 
     # solve E d3 = M d1 - H d2
@@ -206,12 +195,14 @@ def compute_stiffness(data: AnbaData) -> Any:
                     inner(data.chains.chains_d[i][k], data.chains.chains_d[i][k]) * dx
                 ),
             )
-            print(
-                "(l" + str(k) + ", l" + str(k) + ") = ",
-                assemble(
-                    inner(data.chains.chains_l[i][k], data.chains.chains_l[i][k]) * dx
-                ),
-            )
+            if not singular:
+                print(
+                    "(l" + str(k) + ", l" + str(k) + ") = ",
+                    assemble(
+                        inner(data.chains.chains_l[i][k], data.chains.chains_l[i][k])
+                        * dx
+                    ),
+                )
     for i in range(4):
         ll = len(data.chains.chains[i])
         for k in range(ll // 2, 0, -1):
@@ -220,7 +211,7 @@ def compute_stiffness(data: AnbaData) -> Any:
                 + H * data.chains.chains[i][ll - 1 - k].vector()
             )
             if ll - 1 - k > 0:
-                res -= data.output_data.M * data.chains.chains[i][ll - 2 - k].vector()
+                res -= M * data.chains.chains[i][ll - 2 - k].vector()
             res = as_backend_type(res).vec()
             print("residual chain", i, "order", ll, res.dot(res))
     print("")
@@ -231,7 +222,7 @@ def compute_stiffness(data: AnbaData) -> Any:
         row1_col.append(as_backend_type(data.chains.chains[0][0].vector().copy()).vec())
         row2_col.append(as_backend_type(data.chains.chains[0][0].vector().copy()).vec())
 
-    M_p = as_backend_type(data.output_data.M).mat()
+    M_p = as_backend_type(M).mat()
     C_p = as_backend_type(C).mat()
     E_p = as_backend_type(E).mat()
     S = PETSc.Mat().createDense([6, 6])

@@ -26,6 +26,15 @@ from dolfin import UnitSquareMesh, Constant, MeshFunction, ALE, XDMFFile, parame
 # from dolfin import compile_extension_module
 
 from anba4 import material
+from anba4 import (
+    initialize_anba_model,
+    initialize_fe_functions,
+    initialize_chains,
+    compute_stiffness,
+    compute_inertia,
+    stress_field,
+    strain_field,
+)
 
 parameters["form_compiler"]["optimize"] = True
 parameters["form_compiler"]["quadrature_degree"] = 2
@@ -57,13 +66,25 @@ matLibrary = []
 matLibrary.append(mat1)
 
 
-anba = anbax_singular(
-    mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
+anbax_data = initialize_anba_model(
+    mesh,
+    2,
+    matLibrary,
+    materials,
+    plane_orientations,
+    fiber_orientations,
+    singular=True,
 )
-stiff = anba.compute()
+initialize_fe_functions(anbax_data)
+initialize_chains(anbax_data)
+
+# anbax_singular(
+#     mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
+# )
+stiff = compute_stiffness(anbax_data)
 stiff.view()
 
-mass = anba.inertia()
+mass = compute_inertia(anbax_data)
 mass.view()
 
 stress_result_file = XDMFFile("Stress.xdmf")
@@ -73,3 +94,10 @@ stress_result_file.parameters["flush_output"] = True
 
 # anba.stress_field([1., 0., 0.,], [0., 0., 0.], "global", "paraview")
 # stress_result_file.write(anba.STRESS, t = 0.)
+stress = stress_field(
+    anbax_data,
+    [1.0, 0.0, 0.0],
+    [0.0, 0.0, 0.0],
+    "local",
+    "paraview",
+)

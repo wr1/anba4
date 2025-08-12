@@ -21,12 +21,19 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+# from dolfin import *
+import dolfin
 
 # from dolfin import compile_extension_module
 import numpy as np
 
-from anba4 import *
+import anba4
+from anba4 import solvers
+
+# from anba4 import initialize_anba_model, material, initialize_fe_functions, initialize_chains
+# from anba4.solvers.stiffness import compute_stiffness
+# from anba4.solvers.inertia import compute_inertia
+# from anba4.solvers.stress import stress_field, strain_field
 
 parameters["form_compiler"]["optimize"] = True
 parameters["form_compiler"]["quadrature_degree"] = 2
@@ -39,17 +46,17 @@ nu = 0.33
 matMechanicProp = [E, nu]
 # Meshing domain.
 
-mesh = UnitSquareMesh(10, 10)
-ALE.move(mesh, Constant([-0.5, -0.5]))
+mesh = dolfin.UnitSquareMesh(10, 10)
+dolfin.ALE.move(mesh, dolfin.Constant([-0.5, -0.5]))
 
 # CompiledSubDomain
-materials = MeshFunction("size_t", mesh, mesh.topology().dim())
-fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
-plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
 
-materials.set_all(0)
-fiber_orientations.set_all(0.0)
-plane_orientations.set_all(90.0)
+anba4.materials.set_all(0)
+anba4.fiber_orientations.set_all(0.0)
+anba4.plane_orientations.set_all(90.0)
 
 # Build material property library.
 mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
