@@ -19,6 +19,7 @@ from .voight_notation import (
     strainVectorToStrainTensor,
     strainTensorToStrainVector,
 )
+from .data_model import AnbaData
 
 
 def ComputeShearCenter(stiff_matrix):
@@ -92,10 +93,10 @@ def epsilon(u, up):
     return 0.5 * (g3.T + g3)
 
 
-def rotated_epsilon(data, u, up):
+def rotated_epsilon(data: AnbaData, u, up):
     "Return symmetric 3D infinitesimal strain tensor rotated into material reference."
     eps = epsilon(u, up)
-    rot = data.MaterialRotation_matrix
+    rot = data.material_data.MaterialRotation_matrix
     rotMatrix = as_matrix(
         (
             (rot[0], rot[1], rot[2], rot[3], rot[4], rot[5]),
@@ -129,14 +130,14 @@ def sigma_helper(mod, u, up):
     return st
 
 
-def Sigma(data, u, up):
+def Sigma(data: AnbaData, u, up):
     "Return second Piola-Kirchhoff stress tensor."
-    return sigma_helper(data.modulus, u, up)
+    return sigma_helper(data.material_data.modulus, u, up)
 
 
-def RotatedSigma(data, u, up):
+def RotatedSigma(data: AnbaData, u, up):
     "Return second Piola-Kirchhoff stress tensor."
-    return sigma_helper(data.RotatedStress_modulus, u, up)
+    return sigma_helper(data.material_data.RotatedStress_modulus, u, up)
 
 
 def local_project(v, V, u=None):
@@ -154,3 +155,4 @@ def local_project(v, V, u=None):
     else:
         solver.solve_local_rhs(u)
         return
+

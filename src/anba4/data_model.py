@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from typing import Any, List, Optional
 from dolfin import *
 
-
 class Material(BaseModel):
     name: str
     E: float  # Young's modulus
@@ -12,16 +11,20 @@ class Material(BaseModel):
     plane_orientation: List[float]  # Plane orientation in Voigt notation
     scaling_constraint: float = 1.0  # Scaling constraint for the material
 
+class MaterialData(BaseModel):
+    modulus: Optional[Any] = None
+    RotatedStress_modulus: Optional[Any] = None
+    MaterialRotation_matrix: Optional[Any] = None
+    density: Optional[Any] = None
 
 class InputData(BaseModel):
     mesh: Any
     degree: int
-    # matLibrary: List[Any]
-    materials: List[Material]
+    matLibrary: Optional[List[Any]] = None
+    materials: Any
     fiber_orientations: Any
     plane_orientations: Any
     scaling_constraint: float = 1.0
-
 
 class FEFunctions(BaseModel):
     POS: Any
@@ -48,7 +51,6 @@ class FEFunctions(BaseModel):
     UT: Optional[Any] = None
     LT: Optional[Any] = None
 
-
 class Chains(BaseModel):
     base_chains_expression: Optional[List[Any]] = None
     linear_chains_expression: Optional[List[Any]] = None
@@ -58,7 +60,6 @@ class Chains(BaseModel):
     chains: Optional[List[List[Any]]] = None
     chains_d: Optional[List[List[Any]]] = None
     chains_l: Optional[List[List[Any]]] = None
-
 
 class OutputData(BaseModel):
     null_space: Optional[Any] = None
@@ -71,9 +72,10 @@ class OutputData(BaseModel):
     G: Optional[Any] = None
     Stiff: Optional[Any] = None
 
-
 class AnbaData(BaseModel):
     input_data: InputData
+    material_data: MaterialData = MaterialData()
     fe_functions: FEFunctions
     chains: Chains
     output_data: OutputData
+

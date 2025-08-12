@@ -26,11 +26,14 @@ from petsc4py import PETSc
 
 import numpy as np
 
-from anba4.utils import Sigma
+from typing import Any
+
+from ..utils import Sigma
+from ..data_model import AnbaData
 
 
-def compute_stiffness(data):
-    stress = Sigma(data, data.U, data.UP)
+def compute_stiffness(data: AnbaData) -> Any:
+    stress = Sigma(data, data.fe_functions.U, data.fe_functions.UP)
     stress_n = stress[:, 2]
     stress_1 = stress[:, 0]
     stress_2 = stress[:, 1]
@@ -42,55 +45,55 @@ def compute_stiffness(data):
         ]
     )
 
-    ES = derivative(stress, data.U, data.UT)
-    ES_t = derivative(stress_s, data.U, data.UT)
-    ES_n = derivative(stress_s, data.UP, data.UT)
-    En_t = derivative(stress_n, data.U, data.UT)
-    En_n = derivative(stress_n, data.UP, data.UT)
+    ES = derivative(stress, data.fe_functions.U, data.fe_functions.UT)
+    ES_t = derivative(stress_s, data.fe_functions.U, data.fe_functions.UT)
+    ES_n = derivative(stress_s, data.fe_functions.UP, data.fe_functions.UT)
+    En_t = derivative(stress_n, data.fe_functions.U, data.fe_functions.UT)
+    En_n = derivative(stress_n, data.fe_functions.UP, data.fe_functions.UT)
 
-    Mf = inner(data.UV, En_n) * dx
+    Mf = inner(data.fe_functions.UV, En_n) * dx
     M = assemble(Mf)
-    data.M = M
+    data.output_data.M = M
 
-    Cf = inner(grad(data.UV), ES_n) * dx
+    Cf = inner(grad(data.fe_functions.UV), ES_n) * dx
     C = assemble(Cf)
-    Hf = (inner(grad(data.UV), ES_n) - inner(data.UV, En_t)) * dx
+    Hf = (inner(grad(data.fe_functions.UV), ES_n) - inner(data.fe_functions.UV, En_t)) * dx
     H = assemble(Hf)
-    data.H = H
+    data.output_data.H = H
 
     # the four initial solutions
 
-    Escal = Constant(data.scaling_constraint)
-    Ef = inner(grad(data.UV), ES_t) * dx
+    Escal = Constant(data.input_data.scaling_constraint)
+    Ef = inner(grad(data.fe_functions.UV), ES_t) * dx
     Ef += (
-        (data.LV[0] * data.UT[0] + data.LV[1] * data.UT[1] + data.LV[2] * data.UT[2])
+        (data.fe_functions.LV[0] * data.fe_functions.UT[0] + data.fe_functions.LV[1] * data.fe_functions.UT[1] + data.fe_functions.LV[2] * data.fe_functions.UT[2])
         * Escal
         * dx
     )
-    Ef += data.LV[3] * dot(data.UT, data.chains_d[1][0]) * Escal * dx
+    Ef += data.fe_functions.LV[3] * dot(data.fe_functions.UT, data.chains.chains_d[1][0]) * Escal * dx
     Ef += (
-        (data.UV[0] * data.LT[0] + data.UV[1] * data.LT[1] + data.UV[2] * data.LT[2])
+        (data.fe_functions.UV[0] * data.fe_functions.LT[0] + data.fe_functions.UV[1] * data.fe_functions.LT[1] + data.fe_functions.UV[2] * data.fe_functions.LT[2])
         * Escal
         * dx
     )
-    Ef += data.LT[3] * dot(data.UV, data.chains_d[1][0]) * Escal * dx
+    Ef += data.fe_functions.LT[3] * dot(data.fe_functions.UV, data.chains.chains_d[1][0]) * Escal * dx
     E = assemble(Ef)
-    data.E = E
+    data.output_data.E = E
     S = (
-        dot(stress_n, data.RV3F) * dx
-        + dot(cross(pos3d(data.POS), stress_n), data.RV3M) * dx
+        dot(stress_n, data.fe_functions.RV3F) * dx
+        + dot(cross(pos3d(data.fe_functions.POS), stress_n), data.fe_functions.RV3M) * dx
     )
-    L_res_f = derivative(S, data.UP, data.UT)
-    data.L_res = assemble(L_res_f)
-    R_res_f = derivative(S, data.U, data.UT)
-    data.R_res = assemble(R_res_f)
+    L_res_f = derivative(S, data.fe_functions.UP, data.fe_functions.UT)
+    data.output_data.L_res = assemble(L_res_f)
+    R_res_f = derivative(S, data.fe_functions.U, data.fe_functions.UT)
+    data.output_data.R_res = assemble(R_res_f)
 
     maxres = 0.0
     for i in range(4):
-        tmp = E * data.chains[i][0].vector()
+        tmp = E * data.chains.chains[i][0].vector()
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
     for i in [2, 3]:
-        tmp = -(H * data.chains[i][0].vector()) - (E * data.chains[i][1].vector())
+        tmp = -(H * data.chains.chains[i][0].vector()) - (E * data.chains.chains[i][1].vector())
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
 
     #        if maxres > 1.E-16:
@@ -99,73 +102,73 @@ def compute_stiffness(data):
     #            scaling_factor = 1.
 
     #        for i in range(4):
-    #            data.chains[i][0].vector()[:] = data.chains[i][0].vector() * scaling_factor
+    #            data.chains.chains[i][0].vector()[:] = data.chains.chains[i][0].vector() * scaling_factor
     #        for i in [2, 3]:
-    #            data.chains[i][1].vector()[:] = data.chains[i][1].vector() * scaling_factor
+    #            data.chains.chains[i][1].vector()[:] = data.chains.chains[i][1].vector() * scaling_factor
     for i in range(4):
-        tmp = E * data.chains[i][0].vector()
+        tmp = E * data.chains.chains[i][0].vector()
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
     for i in [2, 3]:
-        tmp = -(H * data.chains[i][0].vector()) - (E * data.chains[i][1].vector())
+        tmp = -(H * data.chains.chains[i][0].vector()) - (E * data.chains.chains[i][1].vector())
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
 
     # solve E d1 = -H d0
     for i in range(2):
-        rhs = -(H * data.chains[i][0].vector())
-        data.null_space.orthogonalize(rhs)
-        solve(E, data.chains[i][1].vector(), rhs)
-        data.null_space.orthogonalize(data.chains[i][1].vector())
+        rhs = -(H * data.chains.chains[i][0].vector())
+        data.output_data.null_space.orthogonalize(rhs)
+        solve(E, data.chains.chains[i][1].vector(), rhs)
+        data.output_data.null_space.orthogonalize(data.chains.chains[i][1].vector())
 
     # solve E d2 = M d0 - H d1
     for i in [2, 3]:
-        rhs = -(H * data.chains[i][1].vector()) + (M * data.chains[i][0].vector())
-        data.null_space.orthogonalize(rhs)
-        solve(E, data.chains[i][2].vector(), rhs)
-        data.null_space.orthogonalize(data.chains[i][2].vector())
+        rhs = -(H * data.chains.chains[i][1].vector()) + (data.output_data.M * data.chains.chains[i][0].vector())
+        data.output_data.null_space.orthogonalize(rhs)
+        solve(E, data.chains.chains[i][2].vector(), rhs)
+        data.output_data.null_space.orthogonalize(data.chains.chains[i][2].vector())
 
     a = np.zeros((2, 2))
     b = np.zeros((2, 1))
     for i in [2, 3]:
-        res = -(H * data.chains[i][2].vector()) + (M * data.chains[i][1].vector())
+        res = -(H * data.chains.chains[i][2].vector()) + (data.output_data.M * data.chains.chains[i][1].vector())
         for k in range(2):
-            b[k] = res.inner(data.chains[k][0].vector())
+            b[k] = res.inner(data.chains.chains[k][0].vector())
             for ii in range(2):
                 a[k, ii] = (
-                    -(H * data.chains[ii][1].vector())
-                    + (M * data.chains[ii][0].vector())
-                ).inner(data.chains[k][0].vector())
+                    -(H * data.chains.chains[ii][1].vector())
+                    + (data.output_data.M * data.chains.chains[ii][0].vector())
+                ).inner(data.chains.chains[k][0].vector())
         x = np.linalg.solve(a, b)
         for ii in range(2):
-            data.chains[i][2].vector()[:] -= x[ii] * data.chains[ii][1].vector()
-            data.chains[i][1].vector()[:] -= x[ii] * data.chains[ii][0].vector()
+            data.chains.chains[i][2].vector()[:] -= x[ii] * data.chains.chains[ii][1].vector()
+            data.chains.chains[i][1].vector()[:] -= x[ii] * data.chains.chains[ii][0].vector()
 
     for i in [2, 3]:
-        rhs = -(H * data.chains[i][2].vector()) + (M * data.chains[i][1].vector())
-        data.null_space.orthogonalize(rhs)
-        solve(E, data.chains[i][3].vector(), rhs)
-        data.null_space.orthogonalize(data.chains[i][3].vector())
+        rhs = -(H * data.chains.chains[i][2].vector()) + (data.output_data.M * data.chains.chains[i][1].vector())
+        data.output_data.null_space.orthogonalize(rhs)
+        solve(E, data.chains.chains[i][3].vector(), rhs)
+        data.output_data.null_space.orthogonalize(data.chains.chains[i][3].vector())
 
     # solve E d3 = M d1 - H d2
     for i in range(4):
         print("\nChain " + str(i) + ":")
-        for k in range(len(data.chains[i]) // 2, len(data.chains[i])):
+        for k in range(len(data.chains.chains[i]) // 2, len(data.chains.chains[i])):
             print(
                 "(d" + str(k) + ", d" + str(k) + ") = ",
-                assemble(inner(data.chains_d[i][k], data.chains_d[i][k]) * dx),
+                assemble(inner(data.chains.chains_d[i][k], data.chains.chains_d[i][k]) * dx),
             )
             print(
                 "(l" + str(k) + ", l" + str(k) + ") = ",
-                assemble(inner(data.chains_l[i][k], data.chains_l[i][k]) * dx),
+                assemble(inner(data.chains.chains_l[i][k], data.chains.chains_l[i][k]) * dx),
             )
     for i in range(4):
-        ll = len(data.chains[i])
+        ll = len(data.chains.chains[i])
         for k in range(ll // 2, 0, -1):
             res = (
-                E * data.chains[i][ll - k].vector()
-                + H * data.chains[i][ll - 1 - k].vector()
+                E * data.chains.chains[i][ll - k].vector()
+                + H * data.chains.chains[i][ll - 1 - k].vector()
             )
             if ll - 1 - k > 0:
-                res -= M * data.chains[i][ll - 2 - k].vector()
+                res -= data.output_data.M * data.chains.chains[i][ll - 2 - k].vector()
             res = as_backend_type(res).vec()
             print("residual chain", i, "order", ll, res.dot(res))
     print("")
@@ -173,10 +176,10 @@ def compute_stiffness(data):
     row1_col = []
     row2_col = []
     for i in range(6):
-        row1_col.append(as_backend_type(data.chains[0][0].vector().copy()).vec())
-        row2_col.append(as_backend_type(data.chains[0][0].vector().copy()).vec())
+        row1_col.append(as_backend_type(data.chains.chains[0][0].vector().copy()).vec())
+        row2_col.append(as_backend_type(data.chains.chains[0][0].vector().copy()).vec())
 
-    M_p = as_backend_type(M).mat()
+    M_p = as_backend_type(data.output_data.M).mat()
     C_p = as_backend_type(C).mat()
     E_p = as_backend_type(E).mat()
     S = PETSc.Mat().createDense([6, 6])
@@ -195,41 +198,41 @@ def compute_stiffness(data):
 
     col = -1
     for i in range(4):
-        ll = len(data.chains[i])
+        ll = len(data.chains.chains[i])
         for k in range(ll // 2, 0, -1):
             col = col + 1
             M_p.mult(
-                as_backend_type(data.chains[i][ll - 1 - k].vector()).vec(),
+                as_backend_type(data.chains.chains[i][ll - 1 - k].vector()).vec(),
                 row1_col[col],
             )
             C_p.multTransposeAdd(
-                as_backend_type(data.chains[i][ll - k].vector()).vec(),
+                as_backend_type(data.chains.chains[i][ll - k].vector()).vec(),
                 row1_col[col],
                 row1_col[col],
             )
             C_p.mult(
-                as_backend_type(data.chains[i][ll - 1 - k].vector()).vec(),
+                as_backend_type(data.chains.chains[i][ll - 1 - k].vector()).vec(),
                 row2_col[col],
             )
             E_p.multAdd(
-                as_backend_type(data.chains[i][ll - k].vector()).vec(),
+                as_backend_type(data.chains.chains[i][ll - k].vector()).vec(),
                 row2_col[col],
                 row2_col[col],
             )
 
     row = -1
     for i in range(4):
-        ll = len(data.chains[i])
+        ll = len(data.chains.chains[i])
         for k in range(ll // 2, 0, -1):
             row = row + 1
             for c in range(6):
                 S.setValues(
                     row,
                     c,
-                    as_backend_type(data.chains[i][ll - 1 - k].vector())
+                    as_backend_type(data.chains.chains[i][ll - 1 - k].vector())
                     .vec()
                     .dot(row1_col[c])
-                    + as_backend_type(data.chains[i][ll - k].vector())
+                    + as_backend_type(data.chains.chains[i][ll - k].vector())
                     .vec()
                     .dot(row2_col[c]),
                 )
@@ -237,8 +240,8 @@ def compute_stiffness(data):
                 row,
                 range(6),
                 as_backend_type(
-                    data.L_res * data.chains[i][ll - 1 - k].vector()
-                    + data.R_res * data.chains[i][ll - k].vector()
+                    data.output_data.L_res * data.chains.chains[i][ll - 1 - k].vector()
+                    + data.output_data.R_res * data.chains.chains[i][ll - k].vector()
                 ).vec(),
             )
 
@@ -261,7 +264,8 @@ def compute_stiffness(data):
     G.transposeMatMult(S, B)
     B.matMult(G, Stiff)
 
-    data.B = B
-    data.G = G
-    data.Stiff = Stiff
+    data.output_data.B = B
+    data.output_data.G = G
+    data.output_data.Stiff = Stiff
     return Stiff
+

@@ -24,16 +24,19 @@
 from dolfin import *
 from petsc4py import PETSc
 
-from anba4.utils import pos3d
+from typing import Any
+
+from ..utils import pos3d
+from ..data_model import AnbaData
 
 
-def compute_inertia(data):
-    Mf = dot(data.RV3F, data.RT3F) * data.density[0] * dx
-    Mf -= dot(data.RV3F, cross(pos3d(data.POS), data.RT3M)) * data.density[0] * dx
-    Mf -= dot(cross(pos3d(data.POS), data.RV3M), data.RT3F) * data.density[0] * dx
+def compute_inertia(data: AnbaData) -> Any:
+    Mf = dot(data.fe_functions.RV3F, data.fe_functions.RT3F) * data.material_data.density[0] * dx
+    Mf -= dot(data.fe_functions.RV3F, cross(pos3d(data.fe_functions.POS), data.fe_functions.RT3M)) * data.material_data.density[0] * dx
+    Mf -= dot(cross(pos3d(data.fe_functions.POS), data.fe_functions.RV3M), data.fe_functions.RT3F) * data.material_data.density[0] * dx
     Mf += (
-        dot(cross(pos3d(data.POS), data.RV3M), cross(pos3d(data.POS), data.RT3M))
-        * data.density[0]
+        dot(cross(pos3d(data.fe_functions.POS), data.fe_functions.RV3M), cross(pos3d(data.fe_functions.POS), data.fe_functions.RT3M))
+        * data.material_data.density[0]
         * dx
     )
     MM = assemble(Mf)
@@ -41,3 +44,4 @@ def compute_inertia(data):
     Mass = PETSc.Mat()
     M.convert("dense", Mass)
     return Mass
+

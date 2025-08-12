@@ -24,14 +24,15 @@
 from dolfin import *
 from petsc4py import PETSc
 
-from anba4.utils import Sigma, RotatedSigma, local_project
-from anba4.voight_notation import (
+from ..utils import Sigma, RotatedSigma, local_project
+from ..voight_notation import (
     stressTensorToStressVector,
     stressTensorToParaviewStressVector,
 )
+from ..data_model import AnbaData
 
 
-def stress_field(data, force, moment, reference="local", voigt_convention="anba"):
+def stress_field(data: AnbaData, force, moment, reference="local", voigt_convention="anba"):
     if reference == "local":
         stress_comp = lambda u, up: RotatedSigma(data, u, up)
     elif reference == "global":
@@ -64,28 +65,29 @@ def stress_field(data, force, moment, reference="local", voigt_convention="anba"
 
     ksp = PETSc.KSP()
     ksp.create()
-    ksp.setOperators(data.B)
+    ksp.setOperators(data.output_data.B)
     ksp.setType(ksp.Type.PREONLY)  # Just use the preconditioner without a Krylov method
     pc = ksp.getPC()  # Preconditioner
     pc.setType(pc.Type.LU)  # Use a direct solve
 
     ksp.solve(AzInt, eigensol_magnitudes)
 
-    UL = Function(data.UF3R4)
-    ULP = Function(data.UF3R4)
+    UL = Function(data.fe_functions.UF3R4)
+    ULP = Function(data.fe_functions.UF3R4)
     UL.vector()[:] = 0.0
     ULP.vector()[:] = 0.0
     row = -1
     for i in range(4):
-        ll = len(data.chains[i])
+        ll = len(data.chains.chains[i])
         for k in range(ll // 2, 0, -1):
             row = row + 1
-            UL.vector()[:] += data.chains[i][ll - k].vector() * eigensol_magnitudes[row]
+            UL.vector()[:] += data.chains.chains[i][ll - k].vector() * eigensol_magnitudes[row]
             ULP.vector()[:] += (
-                data.chains[i][ll - 1 - k].vector() * eigensol_magnitudes[row]
+                data.chains.chains[i][ll - 1 - k].vector() * eigensol_magnitudes[row]
             )
     (U, L) = split(UL)
     (UP, LP) = split(ULP)
-    stress = local_project(vector_conversion(stress_comp(U, UP)), data.STRESS_FS)
+    stress = local_project(vector_conversion(stress_comp(U, UP)), data.fe_functions.STRESS_FS)
     stress.rename("stress tensor", "")
     return stress
+

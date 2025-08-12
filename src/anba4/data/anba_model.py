@@ -22,8 +22,8 @@
 #
 
 from dolfin import *
-from anba4 import material
-from anba4.data_model import AnbaData
+from .. import material
+from ..data_model import AnbaData, InputData, FEFunctions, Chains, OutputData, MaterialData
 
 
 def initialize_anba_model(
@@ -35,7 +35,7 @@ def initialize_anba_model(
     fiber_orientations,
     scaling_constraint=1.0,
 ):
-    data = AnbaData(
+    input_data = InputData(
         mesh=mesh,
         degree=degree,
         matLibrary=matLibrary,
@@ -44,26 +44,34 @@ def initialize_anba_model(
         plane_orientations=plane_orientations,
         scaling_constraint=scaling_constraint,
     )
-    data.modulus = CompiledExpression(
+    fe_functions = FEFunctions(POS=MeshCoordinates(mesh))
+    data = AnbaData(
+        input_data=input_data,
+        fe_functions=fe_functions,
+        chains=Chains(),
+        output_data=OutputData(),
+        material_data=MaterialData(),
+    )
+    data.material_data.modulus = CompiledExpression(
         material.ElasticModulus(
             matLibrary, materials, plane_orientations, fiber_orientations
         ),
         degree=0,
     )
-    data.RotatedStress_modulus = CompiledExpression(
+    data.material_data.RotatedStress_modulus = CompiledExpression(
         material.RotatedStressElasticModulus(
             matLibrary, materials, plane_orientations, fiber_orientations
         ),
         degree=0,
     )
-    data.MaterialRotation_matrix = CompiledExpression(
+    data.material_data.MaterialRotation_matrix = CompiledExpression(
         material.TransformationMatrix(
             matLibrary, materials, plane_orientations, fiber_orientations
         ),
         degree=0,
     )
-    data.density = CompiledExpression(
+    data.material_data.density = CompiledExpression(
         material.MaterialDensity(matLibrary, materials), degree=0
     )
-    data.POS = MeshCoordinates(mesh)
     return data
+
