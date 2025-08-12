@@ -33,16 +33,24 @@ def initialize_chains(data: AnbaData) -> AnbaData:
         element=data.fe_functions.UF3R4.ufl_element(),
     )
     data.chains.Flex_y = Expression(
-        ("0.", "0.", "-x[0]", "0.", "0.", "0.", "0."), element=data.fe_functions.UF3R4.ufl_element()
+        ("0.", "0.", "-x[0]", "0.", "0.", "0.", "0."),
+        element=data.fe_functions.UF3R4.ufl_element(),
     )
     data.chains.Flex_x = Expression(
-        ("0.", "0.", "-x[1]", "0.", "0.", "0.", "0."), element=data.fe_functions.UF3R4.ufl_element()
+        ("0.", "0.", "-x[1]", "0.", "0.", "0.", "0."),
+        element=data.fe_functions.UF3R4.ufl_element(),
     )
 
-    data.chains.base_chains_expression.append(Constant((0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0)))
+    data.chains.base_chains_expression.append(
+        Constant((0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0))
+    )
     data.chains.base_chains_expression.append(data.chains.Torsion)
-    data.chains.base_chains_expression.append(Constant((1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)))
-    data.chains.base_chains_expression.append(Constant((0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0)))
+    data.chains.base_chains_expression.append(
+        Constant((1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+    )
+    data.chains.base_chains_expression.append(
+        Constant((0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+    )
     data.chains.linear_chains_expression.append(data.chains.Flex_y)
     data.chains.linear_chains_expression.append(data.chains.Flex_x)
 
@@ -63,9 +71,9 @@ def initialize_chains(data: AnbaData) -> AnbaData:
         data.chains.chains[i][0].interpolate(data.chains.base_chains_expression[i])
     # keep torsion independent from translation
     for i in [0, 2, 3]:
-        k = (data.chains.chains[1][0].vector().inner(data.chains.chains[i][0].vector())) / (
-            data.chains.chains[i][0].vector().inner(data.chains.chains[i][0].vector())
-        )
+        k = (
+            data.chains.chains[1][0].vector().inner(data.chains.chains[i][0].vector())
+        ) / (data.chains.chains[i][0].vector().inner(data.chains.chains[i][0].vector()))
         data.chains.chains[1][0].vector()[:] -= k * data.chains.chains[i][0].vector()
 
     # unit norm chains
@@ -74,11 +82,15 @@ def initialize_chains(data: AnbaData) -> AnbaData:
         tmpnorm.append(data.chains.chains[i][0].vector().norm("l2"))
         data.chains.chains[i][0].vector()[:] *= 1.0 / tmpnorm[i]
     # null space
-    data.output_data.null_space = VectorSpaceBasis([data.chains.chains[i][0].vector() for i in range(4)])
+    data.output_data.null_space = VectorSpaceBasis(
+        [data.chains.chains[i][0].vector() for i in range(4)]
+    )
 
     # initialize linear chains
     for i in range(2, 4):
-        data.chains.chains[i][1].interpolate(data.chains.linear_chains_expression[i - 2])
+        data.chains.chains[i][1].interpolate(
+            data.chains.linear_chains_expression[i - 2]
+        )
         data.chains.chains[i][1].vector()[:] *= 1.0 / tmpnorm[i]
         data.output_data.null_space.orthogonalize(data.chains.chains[i][1].vector())
     del tmpnorm
@@ -95,4 +107,3 @@ def initialize_chains(data: AnbaData) -> AnbaData:
             data.chains.chains_d[i].append(d)
             data.chains.chains_l[i].append(l)
     return data
-

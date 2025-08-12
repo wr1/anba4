@@ -21,7 +21,7 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+from dolfin import dot, cross, dx, assemble, as_backend_type
 from petsc4py import PETSc
 
 from typing import Any
@@ -31,11 +31,32 @@ from ..data_model import AnbaData
 
 
 def compute_inertia(data: AnbaData) -> Any:
-    Mf = dot(data.fe_functions.RV3F, data.fe_functions.RT3F) * data.material_data.density[0] * dx
-    Mf -= dot(data.fe_functions.RV3F, cross(pos3d(data.fe_functions.POS), data.fe_functions.RT3M)) * data.material_data.density[0] * dx
-    Mf -= dot(cross(pos3d(data.fe_functions.POS), data.fe_functions.RV3M), data.fe_functions.RT3F) * data.material_data.density[0] * dx
+    Mf = (
+        dot(data.fe_functions.RV3F, data.fe_functions.RT3F)
+        * data.material_data.density[0]
+        * dx
+    )
+    Mf -= (
+        dot(
+            data.fe_functions.RV3F,
+            cross(pos3d(data.fe_functions.POS), data.fe_functions.RT3M),
+        )
+        * data.material_data.density[0]
+        * dx
+    )
+    Mf -= (
+        dot(
+            cross(pos3d(data.fe_functions.POS), data.fe_functions.RV3M),
+            data.fe_functions.RT3F,
+        )
+        * data.material_data.density[0]
+        * dx
+    )
     Mf += (
-        dot(cross(pos3d(data.fe_functions.POS), data.fe_functions.RV3M), cross(pos3d(data.fe_functions.POS), data.fe_functions.RT3M))
+        dot(
+            cross(pos3d(data.fe_functions.POS), data.fe_functions.RV3M),
+            cross(pos3d(data.fe_functions.POS), data.fe_functions.RT3M),
+        )
         * data.material_data.density[0]
         * dx
     )
@@ -44,4 +65,3 @@ def compute_inertia(data: AnbaData) -> Any:
     Mass = PETSc.Mat()
     M.convert("dense", Mass)
     return Mass
-

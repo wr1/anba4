@@ -21,11 +21,11 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+from dolfin import UnitSquareMesh, Constant, MeshFunction, ALE, XDMFFile, parameters
 
 # from dolfin import compile_extension_module
 
-from anba4 import *
+from anba4 import material
 
 parameters["form_compiler"]["optimize"] = True
 parameters["form_compiler"]["quadrature_degree"] = 2

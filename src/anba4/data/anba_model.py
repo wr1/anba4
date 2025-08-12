@@ -23,7 +23,14 @@
 
 from dolfin import *
 from .. import material
-from ..data_model import AnbaData, InputData, FEFunctions, Chains, OutputData, MaterialData
+from ..data_model import (
+    AnbaData,
+    InputData,
+    FEFunctions,
+    Chains,
+    OutputData,
+    MaterialData,
+)
 
 
 def initialize_anba_model(
@@ -65,4 +72,3 @@ def initialize_anba_model(
         matLibrary, materials, degree=0
     )
     return data
-

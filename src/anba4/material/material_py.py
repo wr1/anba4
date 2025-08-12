@@ -2,6 +2,7 @@ import numpy as np
 from dolfin import UserExpression, MeshFunction
 import math
 
+
 class Material:
     def __init__(self, rho=0.0):
         self.rho = rho
@@ -66,6 +67,7 @@ class Material:
     def compute_rotated_stress_elastic_modulus(self, alpha, beta):
         raise NotImplementedError
 
+
 class IsotropicMaterial(Material):
     def __init__(self, mat_mechanic_prop, rho=0.0):
         super().__init__(rho)
@@ -101,6 +103,7 @@ class IsotropicMaterial(Material):
         self.mat_rotated_stress_modulus = np.dot(self.mat_modulus, TM.T)
         return self.mat_rotated_stress_modulus
 
+
 class OrthotropicMaterial(Material):
     def __init__(self, mat_mechanic_prop, rho=0.0):
         super().__init__(rho)
@@ -120,7 +123,13 @@ class OrthotropicMaterial(Material):
 
         self.mat_local_modulus = np.zeros((6, 6))
 
-        delta = (1.0 - nu_xy * nu_yx - nu_yz * nu_zy - nu_xz * nu_zx - 2.0 * nu_yx * nu_zy * nu_xz) / (e_xx * e_yy * e_zz)
+        delta = (
+            1.0
+            - nu_xy * nu_yx
+            - nu_yz * nu_zy
+            - nu_xz * nu_zx
+            - 2.0 * nu_yx * nu_zy * nu_xz
+        ) / (e_xx * e_yy * e_zz)
         self.mat_local_modulus[0, 0] = (1.0 - nu_yz * nu_zy) / (e_yy * e_zz * delta)
         self.mat_local_modulus[0, 1] = (nu_xy + nu_zy * nu_xz) / (e_xx * e_zz * delta)
         self.mat_local_modulus[0, 2] = (nu_xz + nu_xy * nu_yz) / (e_xx * e_yy * delta)
@@ -147,8 +156,11 @@ class OrthotropicMaterial(Material):
         self.mat_rotated_stress_modulus = np.dot(self.mat_local_modulus, TM.T)
         return self.mat_rotated_stress_modulus
 
+
 class ElasticModulus(UserExpression):
-    def __init__(self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs):
+    def __init__(
+        self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
+    ):
         super().__init__(**kwargs)
         self.mats_library = mats_library
         self.material_id = material_id
@@ -159,14 +171,19 @@ class ElasticModulus(UserExpression):
         mat_id = self.material_id[cell.index]
         alpha = self.plane_orientation[cell.index]
         beta = self.fiber_orientation[cell.index]
-        transformed_stiffness = self.mats_library[mat_id].compute_elastic_modulus(alpha, beta)
+        transformed_stiffness = self.mats_library[mat_id].compute_elastic_modulus(
+            alpha, beta
+        )
         values[:] = transformed_stiffness.flatten()
 
     def value_shape(self):
         return (36,)
+
 
 class RotatedStressElasticModulus(UserExpression):
-    def __init__(self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs):
+    def __init__(
+        self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
+    ):
         super().__init__(**kwargs)
         self.mats_library = mats_library
         self.material_id = material_id
@@ -177,14 +194,19 @@ class RotatedStressElasticModulus(UserExpression):
         mat_id = self.material_id[cell.index]
         alpha = self.plane_orientation[cell.index]
         beta = self.fiber_orientation[cell.index]
-        transformed_stiffness = self.mats_library[mat_id].compute_rotated_stress_elastic_modulus(alpha, beta)
+        transformed_stiffness = self.mats_library[
+            mat_id
+        ].compute_rotated_stress_elastic_modulus(alpha, beta)
         values[:] = transformed_stiffness.flatten()
 
     def value_shape(self):
         return (36,)
 
+
 class TransformationMatrix(UserExpression):
-    def __init__(self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs):
+    def __init__(
+        self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
+    ):
         super().__init__(**kwargs)
         self.mats_library = mats_library
         self.material_id = material_id
@@ -201,6 +223,7 @@ class TransformationMatrix(UserExpression):
     def value_shape(self):
         return (36,)
 
+
 class MaterialDensity(UserExpression):
     def __init__(self, mats_library, material_id, **kwargs):
         super().__init__(**kwargs)
@@ -212,5 +235,4 @@ class MaterialDensity(UserExpression):
         values[0] = self.mats_library[mat_id].Rho()
 
     def value_shape(self):
-        return ()
-
+        return (1,)

@@ -21,7 +21,20 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+from dolfin import (
+    derivative,
+    inner,
+    dx,
+    as_tensor,
+    assemble,
+    grad,
+    Constant,
+    dot,
+    cross,
+    sqrt,
+    solve,
+    as_backend_type,
+)
 from petsc4py import PETSc
 
 import numpy as np

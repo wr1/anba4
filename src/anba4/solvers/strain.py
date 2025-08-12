@@ -21,7 +21,7 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+from dolfin import split, Function
 from petsc4py import PETSc
 
 from ..utils import epsilon, rotated_epsilon, local_project
@@ -32,7 +32,9 @@ from ..voight_notation import (
 from ..data_model import AnbaData
 
 
-def strain_field(data: AnbaData, force, moment, reference="local", voigt_convention="anba"):
+def strain_field(
+    data: AnbaData, force, moment, reference="local", voigt_convention="anba"
+):
     if reference == "local":
         strain_comp = lambda u, up: rotated_epsilon(data, u, up)
     elif reference == "global":
@@ -81,13 +83,16 @@ def strain_field(data: AnbaData, force, moment, reference="local", voigt_convent
         ll = len(data.chains.chains[i])
         for k in range(ll // 2, 0, -1):
             row = row + 1
-            UL.vector()[:] += data.chains.chains[i][ll - k].vector() * eigensol_magnitudes[row]
+            UL.vector()[:] += (
+                data.chains.chains[i][ll - k].vector() * eigensol_magnitudes[row]
+            )
             ULP.vector()[:] += (
                 data.chains.chains[i][ll - 1 - k].vector() * eigensol_magnitudes[row]
             )
     (U, L) = split(UL)
     (UP, LP) = split(ULP)
-    strain = local_project(vector_conversion(strain_comp(U, UP)), data.fe_functions.STRESS_FS)
+    strain = local_project(
+        vector_conversion(strain_comp(U, UP)), data.fe_functions.STRESS_FS
+    )
     strain.rename("strain tensor", "")
     return strain
-

@@ -155,4 +155,3 @@ def local_project(v, V, u=None):
     else:
         solver.solve_local_rhs(u)
         return
-

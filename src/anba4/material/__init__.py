@@ -6,4 +6,3 @@ from .material_py import (
     IsotropicMaterial,
     OrthotropicMaterial,
 )
-
