@@ -21,16 +21,13 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
-
-# from dolfin import compile_extension_module
+import dolfin as df
 import numpy as np
 from mshr import Polygon, generate_mesh
-
 from anba4 import *
 
-parameters["form_compiler"]["optimize"] = True
-parameters["form_compiler"]["quadrature_degree"] = 2
+df.parameters["form_compiler"]["optimize"] = True
+df.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 # psi2pa = 6894.7572931783
@@ -111,197 +108,197 @@ h6 = h5 - 2.0 * t
 # tt = 0.03
 top_plies_0 = Polygon(
     [
-        Point(-0.5 * b1, 0.5 * h1),
-        Point(0.5 * b1, 0.5 * h1),
-        Point(0.5 * b0, 0.5 * h0),
-        Point(-0.5 * b0, 0.5 * h0),
+        df.Point(-0.5 * b1, 0.5 * h1),
+        df.Point(0.5 * b1, 0.5 * h1),
+        df.Point(0.5 * b0, 0.5 * h0),
+        df.Point(-0.5 * b0, 0.5 * h0),
     ]
 )
 top_plies_1 = Polygon(
     [
-        Point(-0.5 * b2, 0.5 * h2),
-        Point(0.5 * b2, 0.5 * h2),
-        Point(0.5 * b1, 0.5 * h1),
-        Point(-0.5 * b1, 0.5 * h1),
+        df.Point(-0.5 * b2, 0.5 * h2),
+        df.Point(0.5 * b2, 0.5 * h2),
+        df.Point(0.5 * b1, 0.5 * h1),
+        df.Point(-0.5 * b1, 0.5 * h1),
     ]
 )
 top_plies_2 = Polygon(
     [
-        Point(-0.5 * b3, 0.5 * h3),
-        Point(0.5 * b3, 0.5 * h3),
-        Point(0.5 * b2, 0.5 * h2),
-        Point(-0.5 * b2, 0.5 * h2),
+        df.Point(-0.5 * b3, 0.5 * h3),
+        df.Point(0.5 * b3, 0.5 * h3),
+        df.Point(0.5 * b2, 0.5 * h2),
+        df.Point(-0.5 * b2, 0.5 * h2),
     ]
 )
 top_plies_3 = Polygon(
     [
-        Point(-0.5 * b4, 0.5 * h4),
-        Point(0.5 * b4, 0.5 * h4),
-        Point(0.5 * b3, 0.5 * h3),
-        Point(-0.5 * b3, 0.5 * h3),
+        df.Point(-0.5 * b4, 0.5 * h4),
+        df.Point(0.5 * b4, 0.5 * h4),
+        df.Point(0.5 * b3, 0.5 * h3),
+        df.Point(-0.5 * b3, 0.5 * h3),
     ]
 )
 top_plies_4 = Polygon(
     [
-        Point(-0.5 * b5, 0.5 * h5),
-        Point(0.5 * b5, 0.5 * h5),
-        Point(0.5 * b4, 0.5 * h4),
-        Point(-0.5 * b4, 0.5 * h4),
+        df.Point(-0.5 * b5, 0.5 * h5),
+        df.Point(0.5 * b5, 0.5 * h5),
+        df.Point(0.5 * b4, 0.5 * h4),
+        df.Point(-0.5 * b4, 0.5 * h4),
     ]
 )
 top_plies_5 = Polygon(
     [
-        Point(-0.5 * b6, 0.5 * h6),
-        Point(0.5 * b6, 0.5 * h6),
-        Point(0.5 * b5, 0.5 * h5),
-        Point(-0.5 * b5, 0.5 * h5),
+        df.Point(-0.5 * b6, 0.5 * h6),
+        df.Point(0.5 * b6, 0.5 * h6),
+        df.Point(0.5 * b5, 0.5 * h5),
+        df.Point(-0.5 * b5, 0.5 * h5),
     ]
 )
 
 down_plies_0 = Polygon(
     [
-        Point(-0.5 * b0, -0.5 * h0),
-        Point(0.5 * b0, -0.5 * h0),
-        Point(0.5 * b1, -0.5 * h1),
-        Point(-0.5 * b1, -0.5 * h1),
+        df.Point(-0.5 * b0, -0.5 * h0),
+        df.Point(0.5 * b0, -0.5 * h0),
+        df.Point(0.5 * b1, -0.5 * h1),
+        df.Point(-0.5 * b1, -0.5 * h1),
     ]
 )
 down_plies_1 = Polygon(
     [
-        Point(-0.5 * b1, -0.5 * h1),
-        Point(0.5 * b1, -0.5 * h1),
-        Point(0.5 * b2, -0.5 * h2),
-        Point(-0.5 * b2, -0.5 * h2),
+        df.Point(-0.5 * b1, -0.5 * h1),
+        df.Point(0.5 * b1, -0.5 * h1),
+        df.Point(0.5 * b2, -0.5 * h2),
+        df.Point(-0.5 * b2, -0.5 * h2),
     ]
 )
 down_plies_2 = Polygon(
     [
-        Point(-0.5 * b2, -0.5 * h2),
-        Point(0.5 * b2, -0.5 * h2),
-        Point(0.5 * b3, -0.5 * h3),
-        Point(-0.5 * b3, -0.5 * h3),
+        df.Point(-0.5 * b2, -0.5 * h2),
+        df.Point(0.5 * b2, -0.5 * h2),
+        df.Point(0.5 * b3, -0.5 * h3),
+        df.Point(-0.5 * b3, -0.5 * h3),
     ]
 )
 down_plies_3 = Polygon(
     [
-        Point(-0.5 * b3, -0.5 * h3),
-        Point(0.5 * b3, -0.5 * h3),
-        Point(0.5 * b4, -0.5 * h4),
-        Point(-0.5 * b4, -0.5 * h4),
+        df.Point(-0.5 * b3, -0.5 * h3),
+        df.Point(0.5 * b3, -0.5 * h3),
+        df.Point(0.5 * b4, -0.5 * h4),
+        df.Point(-0.5 * b4, -0.5 * h4),
     ]
 )
 down_plies_4 = Polygon(
     [
-        Point(-0.5 * b4, -0.5 * h4),
-        Point(0.5 * b4, -0.5 * h4),
-        Point(0.5 * b5, -0.5 * h5),
-        Point(-0.5 * b5, -0.5 * h5),
+        df.Point(-0.5 * b4, -0.5 * h4),
+        df.Point(0.5 * b4, -0.5 * h4),
+        df.Point(0.5 * b5, -0.5 * h5),
+        df.Point(-0.5 * b5, -0.5 * h5),
     ]
 )
 down_plies_5 = Polygon(
     [
-        Point(-0.5 * b5, -0.5 * h5),
-        Point(0.5 * b5, -0.5 * h5),
-        Point(0.5 * b6, -0.5 * h6),
-        Point(-0.5 * b6, -0.5 * h6),
+        df.Point(-0.5 * b5, -0.5 * h5),
+        df.Point(0.5 * b5, -0.5 * h5),
+        df.Point(0.5 * b6, -0.5 * h6),
+        df.Point(-0.5 * b6, -0.5 * h6),
     ]
 )
 
 left_plies_0 = Polygon(
     [
-        Point(-0.5 * b0, -0.5 * h0),
-        Point(-0.5 * b1, -0.5 * h1),
-        Point(-0.5 * b1, 0.5 * h1),
-        Point(-0.5 * b0, 0.5 * h0),
+        df.Point(-0.5 * b0, -0.5 * h0),
+        df.Point(-0.5 * b1, -0.5 * h1),
+        df.Point(-0.5 * b1, 0.5 * h1),
+        df.Point(-0.5 * b0, 0.5 * h0),
     ]
 )
 left_plies_1 = Polygon(
     [
-        Point(-0.5 * b1, -0.5 * h1),
-        Point(-0.5 * b2, -0.5 * h2),
-        Point(-0.5 * b2, 0.5 * h2),
-        Point(-0.5 * b1, 0.5 * h1),
+        df.Point(-0.5 * b1, -0.5 * h1),
+        df.Point(-0.5 * b2, -0.5 * h2),
+        df.Point(-0.5 * b2, 0.5 * h2),
+        df.Point(-0.5 * b1, 0.5 * h1),
     ]
 )
 left_plies_2 = Polygon(
     [
-        Point(-0.5 * b2, -0.5 * h2),
-        Point(-0.5 * b3, -0.5 * h3),
-        Point(-0.5 * b3, 0.5 * h3),
-        Point(-0.5 * b2, 0.5 * h2),
+        df.Point(-0.5 * b2, -0.5 * h2),
+        df.Point(-0.5 * b3, -0.5 * h3),
+        df.Point(-0.5 * b3, 0.5 * h3),
+        df.Point(-0.5 * b2, 0.5 * h2),
     ]
 )
 left_plies_3 = Polygon(
     [
-        Point(-0.5 * b3, -0.5 * h3),
-        Point(-0.5 * b4, -0.5 * h4),
-        Point(-0.5 * b4, 0.5 * h4),
-        Point(-0.5 * b3, 0.5 * h3),
+        df.Point(-0.5 * b3, -0.5 * h3),
+        df.Point(-0.5 * b4, -0.5 * h4),
+        df.Point(-0.5 * b4, 0.5 * h4),
+        df.Point(-0.5 * b3, 0.5 * h3),
     ]
 )
 left_plies_4 = Polygon(
     [
-        Point(-0.5 * b4, -0.5 * h4),
-        Point(-0.5 * b5, -0.5 * h5),
-        Point(-0.5 * b5, 0.5 * h5),
-        Point(-0.5 * b4, 0.5 * h4),
+        df.Point(-0.5 * b4, -0.5 * h4),
+        df.Point(-0.5 * b5, -0.5 * h5),
+        df.Point(-0.5 * b5, 0.5 * h5),
+        df.Point(-0.5 * b4, 0.5 * h4),
     ]
 )
 left_plies_5 = Polygon(
     [
-        Point(-0.5 * b5, -0.5 * h5),
-        Point(-0.5 * b6, -0.5 * h6),
-        Point(-0.5 * b6, 0.5 * h6),
-        Point(-0.5 * b5, 0.5 * h5),
+        df.Point(-0.5 * b5, -0.5 * h5),
+        df.Point(-0.5 * b6, -0.5 * h6),
+        df.Point(-0.5 * b6, 0.5 * h6),
+        df.Point(-0.5 * b5, 0.5 * h5),
     ]
 )
 
 right_plies_0 = Polygon(
     [
-        Point(0.5 * b1, -0.5 * h1),
-        Point(0.5 * b0, -0.5 * h0),
-        Point(0.5 * b0, 0.5 * h0),
-        Point(0.5 * b1, 0.5 * h1),
+        df.Point(0.5 * b1, -0.5 * h1),
+        df.Point(0.5 * b0, -0.5 * h0),
+        df.Point(0.5 * b0, 0.5 * h0),
+        df.Point(0.5 * b1, 0.5 * h1),
     ]
 )
 right_plies_1 = Polygon(
     [
-        Point(0.5 * b2, -0.5 * h2),
-        Point(0.5 * b1, -0.5 * h1),
-        Point(0.5 * b1, 0.5 * h1),
-        Point(0.5 * b2, 0.5 * h2),
+        df.Point(0.5 * b2, -0.5 * h2),
+        df.Point(0.5 * b1, -0.5 * h1),
+        df.Point(0.5 * b1, 0.5 * h1),
+        df.Point(0.5 * b2, 0.5 * h2),
     ]
 )
 right_plies_2 = Polygon(
     [
-        Point(0.5 * b3, -0.5 * h3),
-        Point(0.5 * b2, -0.5 * h2),
-        Point(0.5 * b2, 0.5 * h2),
-        Point(0.5 * b3, 0.5 * h3),
+        df.Point(0.5 * b3, -0.5 * h3),
+        df.Point(0.5 * b2, -0.5 * h2),
+        df.Point(0.5 * b2, 0.5 * h2),
+        df.Point(0.5 * b3, 0.5 * h3),
     ]
 )
 right_plies_3 = Polygon(
     [
-        Point(0.5 * b4, -0.5 * h4),
-        Point(0.5 * b3, -0.5 * h3),
-        Point(0.5 * b3, 0.5 * h3),
-        Point(0.5 * b4, 0.5 * h4),
+        df.Point(0.5 * b4, -0.5 * h4),
+        df.Point(0.5 * b3, -0.5 * h3),
+        df.Point(0.5 * b3, 0.5 * h3),
+        df.Point(0.5 * b4, 0.5 * h4),
     ]
 )
 right_plies_4 = Polygon(
     [
-        Point(0.5 * b5, -0.5 * h5),
-        Point(0.5 * b4, -0.5 * h4),
-        Point(0.5 * b4, 0.5 * h4),
-        Point(0.5 * b5, 0.5 * h4),
+        df.Point(0.5 * b5, -0.5 * h5),
+        df.Point(0.5 * b4, -0.5 * h4),
+        df.Point(0.5 * b4, 0.5 * h4),
+        df.Point(0.5 * b5, 0.5 * h4),
     ]
 )
 right_plies_5 = Polygon(
     [
-        Point(0.5 * b6, -0.5 * h6),
-        Point(0.5 * b5, -0.5 * h5),
-        Point(0.5 * b5, 0.5 * h5),
-        Point(0.5 * b6, 0.5 * h6),
+        df.Point(0.5 * b6, -0.5 * h6),
+        df.Point(0.5 * b5, -0.5 * h5),
+        df.Point(0.5 * b5, 0.5 * h5),
+        df.Point(0.5 * b6, 0.5 * h6),
     ]
 )
 
@@ -362,19 +359,19 @@ domain_0.set_subdomain(23, right_plies_4)
 domain_0.set_subdomain(24, right_plies_5)
 
 mesh = generate_mesh(domain_0, 20000)
-mf = MeshFunction("size_t", mesh, 2, mesh.domains())
+mf = df.MeshFunction("size_t", mesh, 2, mesh.domains())
 
-materials = MeshFunction("size_t", mesh, 2, mesh.domains())
+materials = df.MeshFunction("size_t", mesh, 2, mesh.domains())
 # isPiezoActive = MeshFunction("bool", mesh, 2, mesh.domains())
 # isMagneticActive = MeshFunction("bool", mesh, 2, mesh.domains())
-fiber_orientations = MeshFunction("double", mesh, 2, mesh.domains())
-plane_orientations = MeshFunction("double", mesh, 2, mesh.domains())
+fiber_orientations = df.MeshFunction("double", mesh, 2, mesh.domains())
+plane_orientations = df.MeshFunction("double", mesh, 2, mesh.domains())
 
 materials.set_all(0)
 fiber_orientations.set_all(15.0)
 plane_orientations.set_all(0.0)
 
-for ele in cells(mesh):
+for ele in df.cells(mesh):
     i = ele.index()
     flag = mf[i]
     if flag in range(1, 7):
@@ -485,7 +482,7 @@ subdomain_1 = CompiledSubDomain(["x[1] >= -6.0*thickness + tol && x[1] <= -5.0*t
 # ALE.move(mesh, rotate)
 
 # Build material property library.
-mat1 = material.OrthotropicMaterial(matMechanicProp, 7800)
+mat1 = OrthotropicMaterial(matMechanicProp, 7800)
 
 # matMechanicProp1 = matMechanicProp
 # matMechanicProp1[0] = matMechanicProp1[0] / 100.
@@ -497,16 +494,25 @@ matLibrary.append(mat1)
 # matLibrary.append(mat2)
 
 
-anba = anbax_singular(
-    mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, 1.0e0
+anbax_data = initialize_anba_model(
+    mesh,
+    2,
+    matLibrary,
+    materials,
+    plane_orientations,
+    fiber_orientations,
+    singular=True,
+    scaling_constraint=1.0e0,
 )
-stiff = anba.compute()
+initialize_fe_functions(anbax_data)
+initialize_chains(anbax_data)
+stiff = compute_stiffness(anbax_data)
 stiff.view()
 
-mass = anba.inertia()
+mass = compute_inertia(anbax_data)
 mass.view()
 
-stress_result_file = XDMFFile("Stress.xdmf")
+stress_result_file = df.XDMFFile("Stress.xdmf")
 stress_result_file.parameters["functions_share_mesh"] = True
 stress_result_file.parameters["rewrite_function_mesh"] = False
 stress_result_file.parameters["flush_output"] = True
