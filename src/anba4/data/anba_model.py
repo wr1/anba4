@@ -52,26 +52,17 @@ def initialize_anba_model(
         output_data=OutputData(),
         material_data=MaterialData(),
     )
-    data.material_data.modulus = CompiledExpression(
-        material.ElasticModulus(
-            matLibrary, materials, plane_orientations, fiber_orientations
-        ),
-        degree=0,
+    data.material_data.modulus = material.ElasticModulus(
+        matLibrary, materials, plane_orientations, fiber_orientations, degree=0
     )
-    data.material_data.RotatedStress_modulus = CompiledExpression(
-        material.RotatedStressElasticModulus(
-            matLibrary, materials, plane_orientations, fiber_orientations
-        ),
-        degree=0,
+    data.material_data.RotatedStress_modulus = material.RotatedStressElasticModulus(
+        matLibrary, materials, plane_orientations, fiber_orientations, degree=0
     )
-    data.material_data.MaterialRotation_matrix = CompiledExpression(
-        material.TransformationMatrix(
-            matLibrary, materials, plane_orientations, fiber_orientations
-        ),
-        degree=0,
+    data.material_data.MaterialRotation_matrix = material.TransformationMatrix(
+        matLibrary, materials, plane_orientations, fiber_orientations, degree=0
     )
-    data.material_data.density = CompiledExpression(
-        material.MaterialDensity(matLibrary, materials), degree=0
+    data.material_data.density = material.MaterialDensity(
+        matLibrary, materials, degree=0
     )
     return data
 

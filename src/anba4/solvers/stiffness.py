@@ -28,7 +28,7 @@ import numpy as np
 
 from typing import Any
 
-from ..utils import Sigma
+from ..utils import Sigma, pos3d
 from ..data_model import AnbaData
 
 
@@ -57,7 +57,9 @@ def compute_stiffness(data: AnbaData) -> Any:
 
     Cf = inner(grad(data.fe_functions.UV), ES_n) * dx
     C = assemble(Cf)
-    Hf = (inner(grad(data.fe_functions.UV), ES_n) - inner(data.fe_functions.UV, En_t)) * dx
+    Hf = (
+        inner(grad(data.fe_functions.UV), ES_n) - inner(data.fe_functions.UV, En_t)
+    ) * dx
     H = assemble(Hf)
     data.output_data.H = H
 
@@ -66,22 +68,41 @@ def compute_stiffness(data: AnbaData) -> Any:
     Escal = Constant(data.input_data.scaling_constraint)
     Ef = inner(grad(data.fe_functions.UV), ES_t) * dx
     Ef += (
-        (data.fe_functions.LV[0] * data.fe_functions.UT[0] + data.fe_functions.LV[1] * data.fe_functions.UT[1] + data.fe_functions.LV[2] * data.fe_functions.UT[2])
+        (
+            data.fe_functions.LV[0] * data.fe_functions.UT[0]
+            + data.fe_functions.LV[1] * data.fe_functions.UT[1]
+            + data.fe_functions.LV[2] * data.fe_functions.UT[2]
+        )
         * Escal
         * dx
     )
-    Ef += data.fe_functions.LV[3] * dot(data.fe_functions.UT, data.chains.chains_d[1][0]) * Escal * dx
     Ef += (
-        (data.fe_functions.UV[0] * data.fe_functions.LT[0] + data.fe_functions.UV[1] * data.fe_functions.LT[1] + data.fe_functions.UV[2] * data.fe_functions.LT[2])
+        data.fe_functions.LV[3]
+        * dot(data.fe_functions.UT, data.chains.chains_d[1][0])
         * Escal
         * dx
     )
-    Ef += data.fe_functions.LT[3] * dot(data.fe_functions.UV, data.chains.chains_d[1][0]) * Escal * dx
+    Ef += (
+        (
+            data.fe_functions.UV[0] * data.fe_functions.LT[0]
+            + data.fe_functions.UV[1] * data.fe_functions.LT[1]
+            + data.fe_functions.UV[2] * data.fe_functions.LT[2]
+        )
+        * Escal
+        * dx
+    )
+    Ef += (
+        data.fe_functions.LT[3]
+        * dot(data.fe_functions.UV, data.chains.chains_d[1][0])
+        * Escal
+        * dx
+    )
     E = assemble(Ef)
     data.output_data.E = E
     S = (
         dot(stress_n, data.fe_functions.RV3F) * dx
-        + dot(cross(pos3d(data.fe_functions.POS), stress_n), data.fe_functions.RV3M) * dx
+        + dot(cross(pos3d(data.fe_functions.POS), stress_n), data.fe_functions.RV3M)
+        * dx
     )
     L_res_f = derivative(S, data.fe_functions.UP, data.fe_functions.UT)
     data.output_data.L_res = assemble(L_res_f)
@@ -93,7 +114,9 @@ def compute_stiffness(data: AnbaData) -> Any:
         tmp = E * data.chains.chains[i][0].vector()
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
     for i in [2, 3]:
-        tmp = -(H * data.chains.chains[i][0].vector()) - (E * data.chains.chains[i][1].vector())
+        tmp = -(H * data.chains.chains[i][0].vector()) - (
+            E * data.chains.chains[i][1].vector()
+        )
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
 
     #        if maxres > 1.E-16:
@@ -109,7 +132,9 @@ def compute_stiffness(data: AnbaData) -> Any:
         tmp = E * data.chains.chains[i][0].vector()
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
     for i in [2, 3]:
-        tmp = -(H * data.chains.chains[i][0].vector()) - (E * data.chains.chains[i][1].vector())
+        tmp = -(H * data.chains.chains[i][0].vector()) - (
+            E * data.chains.chains[i][1].vector()
+        )
         maxres = max(maxres, sqrt(tmp.inner(tmp)))
 
     # solve E d1 = -H d0
@@ -121,7 +146,9 @@ def compute_stiffness(data: AnbaData) -> Any:
 
     # solve E d2 = M d0 - H d1
     for i in [2, 3]:
-        rhs = -(H * data.chains.chains[i][1].vector()) + (data.output_data.M * data.chains.chains[i][0].vector())
+        rhs = -(H * data.chains.chains[i][1].vector()) + (
+            data.output_data.M * data.chains.chains[i][0].vector()
+        )
         data.output_data.null_space.orthogonalize(rhs)
         solve(E, data.chains.chains[i][2].vector(), rhs)
         data.output_data.null_space.orthogonalize(data.chains.chains[i][2].vector())
@@ -129,7 +156,9 @@ def compute_stiffness(data: AnbaData) -> Any:
     a = np.zeros((2, 2))
     b = np.zeros((2, 1))
     for i in [2, 3]:
-        res = -(H * data.chains.chains[i][2].vector()) + (data.output_data.M * data.chains.chains[i][1].vector())
+        res = -(H * data.chains.chains[i][2].vector()) + (
+            data.output_data.M * data.chains.chains[i][1].vector()
+        )
         for k in range(2):
             b[k] = res.inner(data.chains.chains[k][0].vector())
             for ii in range(2):
@@ -139,11 +168,17 @@ def compute_stiffness(data: AnbaData) -> Any:
                 ).inner(data.chains.chains[k][0].vector())
         x = np.linalg.solve(a, b)
         for ii in range(2):
-            data.chains.chains[i][2].vector()[:] -= x[ii] * data.chains.chains[ii][1].vector()
-            data.chains.chains[i][1].vector()[:] -= x[ii] * data.chains.chains[ii][0].vector()
+            data.chains.chains[i][2].vector()[:] -= (
+                x[ii] * data.chains.chains[ii][1].vector()
+            )
+            data.chains.chains[i][1].vector()[:] -= (
+                x[ii] * data.chains.chains[ii][0].vector()
+            )
 
     for i in [2, 3]:
-        rhs = -(H * data.chains.chains[i][2].vector()) + (data.output_data.M * data.chains.chains[i][1].vector())
+        rhs = -(H * data.chains.chains[i][2].vector()) + (
+            data.output_data.M * data.chains.chains[i][1].vector()
+        )
         data.output_data.null_space.orthogonalize(rhs)
         solve(E, data.chains.chains[i][3].vector(), rhs)
         data.output_data.null_space.orthogonalize(data.chains.chains[i][3].vector())
@@ -154,11 +189,15 @@ def compute_stiffness(data: AnbaData) -> Any:
         for k in range(len(data.chains.chains[i]) // 2, len(data.chains.chains[i])):
             print(
                 "(d" + str(k) + ", d" + str(k) + ") = ",
-                assemble(inner(data.chains.chains_d[i][k], data.chains.chains_d[i][k]) * dx),
+                assemble(
+                    inner(data.chains.chains_d[i][k], data.chains.chains_d[i][k]) * dx
+                ),
             )
             print(
                 "(l" + str(k) + ", l" + str(k) + ") = ",
-                assemble(inner(data.chains.chains_l[i][k], data.chains.chains_l[i][k]) * dx),
+                assemble(
+                    inner(data.chains.chains_l[i][k], data.chains.chains_l[i][k]) * dx
+                ),
             )
     for i in range(4):
         ll = len(data.chains.chains[i])
@@ -268,4 +307,3 @@ def compute_stiffness(data: AnbaData) -> Any:
     data.output_data.G = G
     data.output_data.Stiff = Stiff
     return Stiff
-
