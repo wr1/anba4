@@ -38,7 +38,8 @@ class Test_Isotropic(unittest.TestCase):
         anbax_data = initialize_anba_model(
             mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
         )
-        initialize_fe_basis(anbax_data)
+        initialize_fe_functions(anbax_data)
+        initialize_chains(anbax_data)
         stiff = compute_stiffness(anbax_data)
         stiff.view()
 
