@@ -1,8 +1,5 @@
-from dolfin import *
-
-# from dolfin import compile_extension_module
+import dolfin as df
 import numpy as np
-
 from anba4 import *
 
 
@@ -128,8 +125,8 @@ def build_mesh():
             ]
         )
 
-    mesh = Mesh()
-    me = MeshEditor()
+    mesh = df.Mesh()
+    me = df.MeshEditor()
     me.open(mesh, "quadrilateral", 2, 2)
 
     me.init_vertices(nnodes)
@@ -162,9 +159,9 @@ def build_mesh():
     return mesh
 
 
-parameters["form_compiler"]["optimize"] = True
-parameters["form_compiler"]["cpp_optimize_flags"] = "-O2"
-parameters["form_compiler"]["quadrature_degree"] = 2
+df.parameters["form_compiler"]["optimize"] = True
+df.parameters["form_compiler"]["cpp_optimize_flags"] = "-O2"
+df.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 
@@ -192,9 +189,9 @@ matMechanicProp[2, 2] = nu_xy
 mesh = build_mesh()
 
 # CompiledSubDomain
-materials = MeshFunction("size_t", mesh, mesh.topology().dim())
-fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
-plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+materials = df.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
 tol = 1e-14
 
 
@@ -207,7 +204,7 @@ plane_orientations.set_all(rotation_angle)
 
 
 # rotate mesh.
-rotate = Expression(
+rotate = df.Expression(
     (
         "x[0] * (cos(rotation_angle)-1.0) - x[1] * sin(rotation_angle)",
         "x[0] * sin(rotation_angle) + x[1] * (cos(rotation_angle)-1.0)",
@@ -216,17 +213,25 @@ rotate = Expression(
     degree=1,
 )
 
-ALE.move(mesh, rotate)
+df.ALE.move(mesh, rotate)
 
 # Build material property library.
-mat1 = material.OrthotropicMaterial(matMechanicProp)
+mat1 = OrthotropicMaterial(matMechanicProp)
 
 matLibrary = []
 matLibrary.append(mat1)
 
 
-anba = anbax(
-    mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, 1.0e9
+anbax_data = initialize_anba_model(
+    mesh,
+    1,
+    matLibrary,
+    materials,
+    plane_orientations,
+    fiber_orientations,
+    scaling_constraint=1.0e9,
 )
-stiff = anba.compute()
+initialize_fe_functions(anbax_data)
+initialize_chains(anbax_data)
+stiff = compute_stiffness(anbax_data)
 stiff.view()
