@@ -21,15 +21,12 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
-
-# from dolfin import compile_extension_module
-
+import dolfin as df
 from anba4 import *
 import mshr
 
-parameters["form_compiler"]["optimize"] = True
-parameters["form_compiler"]["quadrature_degree"] = 2
+df.parameters["form_compiler"]["optimize"] = True
+df.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 
@@ -39,10 +36,10 @@ nu = 0.33
 matMechanicProp = [E, nu]
 # Meshing domain.
 
-Square1 = mshr.Rectangle(Point(-40.0, 0.0, 0.0), Point(40.0, 30.0, 0.0))
-Square2 = mshr.Rectangle(Point(-15.0, -10.0, 0.0), Point(15.0, 25.0, 0.0))
-Square3 = mshr.Rectangle(Point(-50.0, 5.0, 0.0), Point(-20.0, 30.0, 0.0))
-Square4 = mshr.Rectangle(Point(20.0, 5.0, 0.0), Point(50.0, 30.0, 0.0))
+Square1 = mshr.Rectangle(df.Point(-40.0, 0.0, 0.0), df.Point(40.0, 30.0, 0.0))
+Square2 = mshr.Rectangle(df.Point(-15.0, -10.0, 0.0), df.Point(15.0, 25.0, 0.0))
+Square3 = mshr.Rectangle(df.Point(-50.0, 5.0, 0.0), df.Point(-20.0, 30.0, 0.0))
+Square4 = mshr.Rectangle(df.Point(20.0, 5.0, 0.0), df.Point(50.0, 30.0, 0.0))
 C_shape = Square1 - Square2 - Square3 - Square4
 mesh = mshr.generate_mesh(C_shape, 64)
 
@@ -54,33 +51,38 @@ mesh = mshr.generate_mesh(C_shape, 64)
 
 
 # CompiledSubDomain
-materials = MeshFunction("size_t", mesh, mesh.topology().dim())
-fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
-plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+materials = df.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
 
 materials.set_all(0)
 fiber_orientations.set_all(0.0)
 plane_orientations.set_all(90.0)
 
 # Build material property library.
-mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
+mat1 = IsotropicMaterial(matMechanicProp, 1.0)
 
 matLibrary = []
 matLibrary.append(mat1)
 
-anba = anbax(mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations)
-stiff = anba.compute()
+anbax_data = initialize_anba_model(
+    mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
+)
+initialize_fe_functions(anbax_data)
+initialize_chains(anbax_data)
+stiff = compute_stiffness(anbax_data)
 stiff.view()
 
-mass = anba.inertia()
+mass = compute_inertia(anbax_data)
 mass.view()
 
-stress_result_file = XDMFFile("Stress.xdmf")
+stress_result_file = df.XDMFFile("Stress.xdmf")
 stress_result_file.parameters["functions_share_mesh"] = True
 stress_result_file.parameters["rewrite_function_mesh"] = False
 stress_result_file.parameters["flush_output"] = True
 
-anba.stress_field(
+stress = stress_field(
+    anbax_data,
     [
         1.0,
         0.0,
@@ -90,4 +92,4 @@ anba.stress_field(
     "local",
     "paraview",
 )
-stress_result_file.write(anba.STRESS, t=0.0)
+stress_result_file.write(stress, t=0.0)
