@@ -1,0 +1,91 @@
+#
+# Copyright (C) 2018 Marco Morandini
+#
+# ----------------------------------------------------------------------
+#
+#    This file is part of Anba.
+#
+#    Anba is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    Anba is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
+#
+# ----------------------------------------------------------------------
+#
+
+from dolfin import *
+from petsc4py import PETSc
+
+from anba4.utils import Sigma, RotatedSigma, local_project
+from anba4.voight_notation import (
+    stressTensorToStressVector,
+    stressTensorToParaviewStressVector,
+)
+
+
+def stress_field(data, force, moment, reference="local", voigt_convention="anba"):
+    if reference == "local":
+        stress_comp = lambda u, up: RotatedSigma(data, u, up)
+    elif reference == "global":
+        stress_comp = lambda u, up: Sigma(data, u, up)
+    else:
+        raise ValueError(
+            'reference argument should be equal to either to"local" or to "global", got "'
+            + reference
+            + '" instead'
+        )
+    if voigt_convention == "anba":
+        vector_conversion = stressTensorToStressVector
+    elif voigt_convention == "paraview":
+        vector_conversion = stressTensorToParaviewStressVector
+    else:
+        raise ValueError(
+            'voigt_convention argument should be equal to either to"anba" or to "paraview", got "'
+            + voigt_convention
+            + '" instead'
+        )
+
+    eigensol_magnitudes = PETSc.Vec().createMPI(6)
+
+    AzInt = PETSc.Vec().createMPI(6)
+
+    AzInt.setValues(range(3), force)
+    AzInt.setValues(range(3, 6), moment)
+    AzInt.assemblyBegin()
+    AzInt.assemblyEnd()
+
+    ksp = PETSc.KSP()
+    ksp.create()
+    ksp.setOperators(data.B)
+    ksp.setType(ksp.Type.PREONLY)  # Just use the preconditioner without a Krylov method
+    pc = ksp.getPC()  # Preconditioner
+    pc.setType(pc.Type.LU)  # Use a direct solve
+
+    ksp.solve(AzInt, eigensol_magnitudes)
+
+    UL = Function(data.UF3R4)
+    ULP = Function(data.UF3R4)
+    UL.vector()[:] = 0.0
+    ULP.vector()[:] = 0.0
+    row = -1
+    for i in range(4):
+        ll = len(data.chains[i])
+        for k in range(ll // 2, 0, -1):
+            row = row + 1
+            UL.vector()[:] += data.chains[i][ll - k].vector() * eigensol_magnitudes[row]
+            ULP.vector()[:] += (
+                data.chains[i][ll - 1 - k].vector() * eigensol_magnitudes[row]
+            )
+    (U, L) = split(UL)
+    (UP, LP) = split(ULP)
+    stress = local_project(vector_conversion(stress_comp(U, UP)), data.STRESS_FS)
+    stress.rename("stress tensor", "")
+    return stress
