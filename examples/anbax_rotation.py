@@ -21,20 +21,12 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
-
-# from dolfin import compile_extension_module
+import dolfin as df
 import numpy as np
-
 from anba4 import *
 
-# from voight_notation import stressVectorToStressTensor, stressTensorToStressVector, strainVectorToStrainTensor, strainTensorToStrainVector
-# from material import material
-# from anbax import anbax
-
-parameters["form_compiler"]["optimize"] = True
-parameters["form_compiler"]["cpp_optimize_flags"] = "-O2"
-parameters["form_compiler"]["quadrature_degree"] = 2
+df.parameters["form_compiler"]["optimize"] = True
+df.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 
@@ -59,23 +51,22 @@ matMechanicProp[2, 0] = nu_zy
 matMechanicProp[2, 1] = nu_zx
 matMechanicProp[2, 2] = nu_xy
 
-matMechanicProp1 = [9.8e9 / 100.0, 0.3]
 # Meshing domain.
 sectionWidth = 3.0023e-2
 sectionHeight = 1.9215e-3
 nPly = 16  # t = 0.2452mm per ply.
 # mesh = RectangleMesh.create([Point(0., 0.), Point(sectionWidth, sectionHeight)], [30, 32], CellType.Type.quadrilateral)
-mesh = RectangleMesh(
-    Point(0.0, 0.0), Point(sectionWidth, sectionHeight), 30, 32, "crossed"
+mesh = df.RectangleMesh(
+    df.Point(0.0, 0.0), df.Point(sectionWidth, sectionHeight), 30, 32, "crossed"
 )
-ALE.move(mesh, Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
+df.ALE.move(mesh, df.Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
 mesh_points = mesh.coordinates()
 # print(mesh_points)
 
 # CompiledSubDomain
-materials = MeshFunction("size_t", mesh, mesh.topology().dim())
-fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
-plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+materials = df.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
 # isActive = MeshFunction("bool", mesh, mesh.topology().dim())
 tol = 1e-14
 
@@ -94,85 +85,85 @@ subdomain_1 = CompiledSubDomain(["x[1] >= -6.0*thickness + tol && x[1] <= -5.0*t
                                  "x[1] >= 5.0*thickness + tol && x[1] <= 6.0*thickness + tol"],\
                                   thickness = sectionHeight / nPly, tol=tol)
                                   """
-subdomain_0_p20 = CompiledSubDomain(
+subdomain_0_p20 = df.CompiledSubDomain(
     "x[1] >= -8.0*thickness - tol && x[1] <= -7.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_1_m70 = CompiledSubDomain(
+subdomain_1_m70 = df.CompiledSubDomain(
     "x[1] >= -7.0*thickness - tol && x[1] <= -6.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_2_m70 = CompiledSubDomain(
+subdomain_2_m70 = df.CompiledSubDomain(
     "x[1] >= -6.0*thickness - tol && x[1] <= -5.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_3_p20 = CompiledSubDomain(
+subdomain_3_p20 = df.CompiledSubDomain(
     "x[1] >= -5.0*thickness - tol && x[1] <= -4.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
 
-subdomain_4_p20 = CompiledSubDomain(
+subdomain_4_p20 = df.CompiledSubDomain(
     "x[1] >= -4.0*thickness - tol && x[1] <= -3.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_5_m70 = CompiledSubDomain(
+subdomain_5_m70 = df.CompiledSubDomain(
     "x[1] >= -3.0*thickness - tol && x[1] <= -2.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_6_m70 = CompiledSubDomain(
+subdomain_6_m70 = df.CompiledSubDomain(
     "x[1] >= -2.0*thickness - tol && x[1] <= -1.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_7_p20 = CompiledSubDomain(
+subdomain_7_p20 = df.CompiledSubDomain(
     "x[1] >= -1.0*thickness - tol && x[1] <= -0.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
 
-subdomain_8_m20 = CompiledSubDomain(
+subdomain_8_m20 = df.CompiledSubDomain(
     "x[1] >= 0.0*thickness - tol && x[1] <= 1.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_9_p70 = CompiledSubDomain(
+subdomain_9_p70 = df.CompiledSubDomain(
     "x[1] >= 1.0*thickness - tol && x[1] <= 2.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_10_p70 = CompiledSubDomain(
+subdomain_10_p70 = df.CompiledSubDomain(
     "x[1] >= 2.0*thickness - tol && x[1] <= 3.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_11_m20 = CompiledSubDomain(
+subdomain_11_m20 = df.CompiledSubDomain(
     "x[1] >= 3.0*thickness - tol && x[1] <= 4.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
 
-subdomain_12_m20 = CompiledSubDomain(
+subdomain_12_m20 = df.CompiledSubDomain(
     "x[1] >= 4.0*thickness - tol && x[1] <= 5.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_13_p70 = CompiledSubDomain(
+subdomain_13_p70 = df.CompiledSubDomain(
     "x[1] >= 5.0*thickness - tol && x[1] <= 6.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_14_p70 = CompiledSubDomain(
+subdomain_14_p70 = df.CompiledSubDomain(
     "x[1] >= 6.0*thickness - tol && x[1] <= 7.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_15_m20 = CompiledSubDomain(
+subdomain_15_m20 = df.CompiledSubDomain(
     "x[1] >= 7.0*thickness - tol && x[1] <= 8.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
@@ -207,7 +198,7 @@ subdomain_14_p70.mark(fiber_orientations, 70.0)
 subdomain_15_m20.mark(fiber_orientations, -20.0)
 
 # rotate mesh.
-rotate = Expression(
+rotate = df.Expression(
     (
         "x[0] * (cos(rotation_angle)-1.0) - x[1] * sin(rotation_angle)",
         "x[0] * sin(rotation_angle) + x[1] * (cos(rotation_angle)-1.0)",
@@ -216,10 +207,10 @@ rotate = Expression(
     degree=1,
 )
 
-ALE.move(mesh, rotate)
+df.ALE.move(mesh, rotate)
 
 # Build material property library.
-mat1 = material.OrthotropicMaterial(matMechanicProp)
+mat1 = OrthotropicMaterial(matMechanicProp)
 
 # matMechanicProp1 = matMechanicProp
 # matMechanicProp1[0] = matMechanicProp1[0] / 100.
@@ -232,7 +223,13 @@ matLibrary.append(mat1)
 
 
 anbax_data = initialize_anba_model(
-    mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, 1.0e9
+    mesh,
+    1,
+    matLibrary,
+    materials,
+    plane_orientations,
+    fiber_orientations,
+    scaling_constraint=1.0e9,
 )
 initialize_fe_functions(anbax_data)
 initialize_chains(anbax_data)
