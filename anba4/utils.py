@@ -3,7 +3,7 @@ from dolfin import (
     as_vector,
     as_tensor,
     grad,
-    stressVectorToStressTensor,
+    # stressVectorToStressTensor,
     as_matrix,
     LocalSolver,
     Function,
@@ -11,6 +11,11 @@ from dolfin import (
     TestFunction,
     inner,
     dx,
+    # strainVectorToStrainTensor,
+    # strainTensorToStrainVector,
+)
+from .voight_notation import (
+    stressVectorToStressTensor,
     strainVectorToStrainTensor,
     strainTensorToStrainVector,
 )

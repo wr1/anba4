@@ -3,18 +3,27 @@ from typing import Any, List, Optional
 from dolfin import *
 
 
-class AnbaData(BaseModel):
+class Material(BaseModel):
+    name: str
+    E: float  # Young's modulus
+    nu: float  # Poisson's ratio
+    density: float  # Density of the material
+    fiber_orientation: List[float]  # Fiber orientation in Voigt notation
+    plane_orientation: List[float]  # Plane orientation in Voigt notation
+    scaling_constraint: float = 1.0  # Scaling constraint for the material
+
+
+class InputData(BaseModel):
     mesh: Any
     degree: int
-    matLibrary: List[Any]
-    materials: Any
+    # matLibrary: List[Any]
+    materials: List[Material]
     fiber_orientations: Any
     plane_orientations: Any
     scaling_constraint: float = 1.0
-    modulus: Any
-    RotatedStress_modulus: Any
-    MaterialRotation_matrix: Any
-    density: Any
+
+
+class FEFunctions(BaseModel):
     POS: Any
     UF3: Optional[Any] = None
     R3: Optional[Any] = None
@@ -38,6 +47,9 @@ class AnbaData(BaseModel):
     ULT: Optional[Any] = None
     UT: Optional[Any] = None
     LT: Optional[Any] = None
+
+
+class Chains(BaseModel):
     base_chains_expression: Optional[List[Any]] = None
     linear_chains_expression: Optional[List[Any]] = None
     Torsion: Optional[Any] = None
@@ -46,6 +58,9 @@ class AnbaData(BaseModel):
     chains: Optional[List[List[Any]]] = None
     chains_d: Optional[List[List[Any]]] = None
     chains_l: Optional[List[List[Any]]] = None
+
+
+class OutputData(BaseModel):
     null_space: Optional[Any] = None
     M: Optional[Any] = None
     H: Optional[Any] = None
@@ -55,3 +70,10 @@ class AnbaData(BaseModel):
     B: Optional[Any] = None
     G: Optional[Any] = None
     Stiff: Optional[Any] = None
+
+
+class AnbaData(BaseModel):
+    input_data: InputData
+    fe_functions: FEFunctions
+    chains: Chains
+    output_data: OutputData

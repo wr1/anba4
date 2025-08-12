@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "anba4"
+version = "0.0.1"
+description = "ANBA4 - ANisotropic Beam Analysis"
+authors = [{name = "Marco Morandini"}]
+dependencies = [
+  "numpy",
+  "fenics-dolfin",
+  "petsc4py",
+  "pydantic"
+]
+
+[project.scripts]
+anba = "anba4.cli:main"
+
