@@ -2,7 +2,7 @@
 # Copyright (C) 2018 Marco Morandini
 # Copyright (C) 2018 Wenguo Zhu
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 #    This file is part of Anba.
 #
@@ -19,7 +19,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
 #
-#----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 #
 import os
 
@@ -28,5 +28,5 @@ from dolfin import compile_cpp_code
 pwd = os.path.dirname(os.path.abspath(__file__))
 with open(pwd + "/material.cpp", "r") as f:
     material_code = f.read()
-#material_cpp = compile_cpp_code(material_code, cppargs=('-g', '-O0'))
+# material_cpp = compile_cpp_code(material_code, cppargs=('-g', '-O0'))
 material_cpp = compile_cpp_code(material_code)
