@@ -234,6 +234,7 @@ matLibrary.append(mat1)
 anbax_data = initialize_anba_model(
     mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, 1.0e9
 )
-initialize_fe_basis(anbax_data)
+initialize_fe_functions(anbax_data)
+initialize_chains(anbax_data)
 stiff = compute_stiffness(anbax_data)
 stiff.view()
