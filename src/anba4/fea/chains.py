@@ -21,7 +21,8 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+# from dolfin import *
+import dolfin
 from ..data.data_model import AnbaData
 
 
@@ -46,27 +47,27 @@ def initialize_chains(data: AnbaData) -> AnbaData:
         flex_y_expr = ("0.", "0.", "-x[0]", "0.", "0.", "0.", "0.")
         flex_x_expr = ("0.", "0.", "-x[1]", "0.", "0.", "0.", "0.")
 
-    data.chains.Torsion = Expression(torsion_expr, element=element)
-    data.chains.Flex_y = Expression(flex_y_expr, element=element)
-    data.chains.Flex_x = Expression(flex_x_expr, element=element)
+    data.chains.Torsion = dolfin.Expression(torsion_expr, element=element)
+    data.chains.Flex_y = dolfin.Expression(flex_y_expr, element=element)
+    data.chains.Flex_x = dolfin.Expression(flex_x_expr, element=element)
 
     if singular:
-        data.chains.base_chains_expression.append(Constant((0.0, 0.0, 1.0)))
+        data.chains.base_chains_expression.append(dolfin.Constant((0.0, 0.0, 1.0)))
         data.chains.base_chains_expression.append(data.chains.Torsion)
-        data.chains.base_chains_expression.append(Constant((1.0, 0.0, 0.0)))
-        data.chains.base_chains_expression.append(Constant((0.0, 1.0, 0.0)))
+        data.chains.base_chains_expression.append(dolfin.Constant((1.0, 0.0, 0.0)))
+        data.chains.base_chains_expression.append(dolfin.Constant((0.0, 1.0, 0.0)))
         data.chains.linear_chains_expression.append(data.chains.Flex_y)
         data.chains.linear_chains_expression.append(data.chains.Flex_x)
     else:
         data.chains.base_chains_expression.append(
-            Constant((0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0))
+            dolfin.Constant((0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0))
         )
         data.chains.base_chains_expression.append(data.chains.Torsion)
         data.chains.base_chains_expression.append(
-            Constant((1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+            dolfin.Constant((1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0))
         )
         data.chains.base_chains_expression.append(
-            Constant((0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0))
+            dolfin.Constant((0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0))
         )
         data.chains.linear_chains_expression.append(data.chains.Flex_y)
         data.chains.linear_chains_expression.append(data.chains.Flex_x)
@@ -79,14 +80,14 @@ def initialize_chains(data: AnbaData) -> AnbaData:
     for i in range(4):
         for k in range(2):
             data.chains.chains[i].append(
-                Function(
+                dolfin.Function(
                     data.fe_functions.UF3R4 if not singular else data.fe_functions.UF3
                 )
             )
     for i in range(2, 4):
         for k in range(2):
             data.chains.chains[i].append(
-                Function(
+                dolfin.Function(
                     data.fe_functions.UF3R4 if not singular else data.fe_functions.UF3
                 )
             )
@@ -107,7 +108,7 @@ def initialize_chains(data: AnbaData) -> AnbaData:
         tmpnorm.append(data.chains.chains[i][0].vector().norm("l2"))
         data.chains.chains[i][0].vector()[:] *= 1.0 / tmpnorm[i]
     # null space
-    data.output_data.null_space = VectorSpaceBasis(
+    data.output_data.null_space = dolfin.VectorSpaceBasis(
         [data.chains.chains[i][0].vector() for i in range(4)]
     )
 
@@ -123,13 +124,13 @@ def initialize_chains(data: AnbaData) -> AnbaData:
     if not singular:
         for i in range(4):
             for k in range(2):
-                (d, l) = split(data.chains.chains[i][k])
+                (d, l) = dolfin.split(data.chains.chains[i][k])
                 data.chains.chains_d[i].append(d)
                 data.chains.chains_l[i].append(l)
 
         for i in range(2, 4):
             for k in range(2, 4):
-                (d, l) = split(data.chains.chains[i][k])
+                (d, l) = dolfin.split(data.chains.chains[i][k])
                 data.chains.chains_d[i].append(d)
                 data.chains.chains_l[i].append(l)
     else:
