@@ -65,7 +65,8 @@ plane_orientations.set_all(rotation_angle)
 lower_portion.mark(materials, 1)
 hole.mark(materials, 2)
 dolfin.plot(materials, "Subdomains")
-plt.show()
+# plt.show()
+plt.savefig("anbax_multimat_with_hole_mesh.png")
 
 # rotate mesh.
 mat1 = anba4.material.IsotropicMaterial(matMechanicProp1)
