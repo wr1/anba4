@@ -42,8 +42,12 @@ def initialize_fe_functions(data: AnbaData) -> AnbaData:
     R3R3_ELEMENT = MixedElement(R3_ELEMENT, R3_ELEMENT)
     data.fe_functions.R3R3 = FunctionSpace(mesh, R3R3_ELEMENT)
     parameters["reorder_dofs_serial"] = sp
-    (data.fe_functions.RV3F, data.fe_functions.RV3M) = TestFunctions(data.fe_functions.R3R3)
-    (data.fe_functions.RT3F, data.fe_functions.RT3M) = TrialFunctions(data.fe_functions.R3R3)
+    (data.fe_functions.RV3F, data.fe_functions.RV3M) = TestFunctions(
+        data.fe_functions.R3R3
+    )
+    (data.fe_functions.RT3F, data.fe_functions.RT3M) = TrialFunctions(
+        data.fe_functions.R3R3
+    )
 
     STRESS_ELEMENT = VectorElement("DG", mesh.ufl_cell(), 0, 6)
     data.fe_functions.STRESS_FS = FunctionSpace(mesh, STRESS_ELEMENT)
@@ -63,13 +67,16 @@ def initialize_fe_functions(data: AnbaData) -> AnbaData:
         data.fe_functions.ULP = Function(data.fe_functions.UF3R4)
         (data.fe_functions.UP, data.fe_functions.LP) = split(data.fe_functions.ULP)
         data.fe_functions.ULV = TestFunction(data.fe_functions.UF3R4)
-        (data.fe_functions.UV, data.fe_functions.LV) = TestFunctions(data.fe_functions.UF3R4)
+        (data.fe_functions.UV, data.fe_functions.LV) = TestFunctions(
+            data.fe_functions.UF3R4
+        )
         data.fe_functions.ULT = TrialFunction(data.fe_functions.UF3R4)
-        (data.fe_functions.UT, data.fe_functions.LT) = TrialFunctions(data.fe_functions.UF3R4)
+        (data.fe_functions.UT, data.fe_functions.LT) = TrialFunctions(
+            data.fe_functions.UF3R4
+        )
     else:
         data.fe_functions.U = Function(data.fe_functions.UF3)
         data.fe_functions.UP = Function(data.fe_functions.UF3)
         data.fe_functions.UV = TestFunction(data.fe_functions.UF3)
         data.fe_functions.UT = TrialFunction(data.fe_functions.UF3)
     return data
-

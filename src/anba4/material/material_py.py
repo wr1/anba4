@@ -1,5 +1,5 @@
 import numpy as np
-from dolfin import UserExpression, MeshFunction
+from dolfin import UserExpression
 import math
 
 

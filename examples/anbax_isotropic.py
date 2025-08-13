@@ -28,15 +28,14 @@ import dolfin
 import numpy as np
 
 import anba4
-from anba4 import solvers
 
 # from anba4 import initialize_anba_model, material, initialize_fe_functions, initialize_chains
 # from anba4.solvers.stiffness import compute_stiffness
 # from anba4.solvers.inertia import compute_inertia
 # from anba4.solvers.stress import stress_field, strain_field
 
-parameters["form_compiler"]["optimize"] = True
-parameters["form_compiler"]["quadrature_degree"] = 2
+dolfin.parameters["form_compiler"]["optimize"] = True
+dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 
@@ -54,33 +53,33 @@ materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
 fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
 plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
 
-anba4.materials.set_all(0)
-anba4.fiber_orientations.set_all(0.0)
-anba4.plane_orientations.set_all(90.0)
+materials.set_all(0)
+fiber_orientations.set_all(0.0)
+plane_orientations.set_all(90.0)
 
 # Build material property library.
-mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
+mat1 = anba4.material.IsotropicMaterial(matMechanicProp, 1.0)
 
 matLibrary = []
 matLibrary.append(mat1)
 
-anbax_data = initialize_anba_model(
+anbax_data = anba4.initialize_anba_model(
     mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
 )
-initialize_fe_functions(anbax_data)
-initialize_chains(anbax_data)
-stiff = compute_stiffness(anbax_data)
+anba4.initialize_fe_functions(anbax_data)
+anba4.initialize_chains(anbax_data)
+stiff = anba4.compute_stiffness(anbax_data)
 stiff.view()
 
-mass = compute_inertia(anbax_data)
+mass = anba4.compute_inertia(anbax_data)
 mass.view()
 
-stress_result_file = XDMFFile("Stress.xdmf")
+stress_result_file = dolfin.XDMFFile("Stress.xdmf")
 stress_result_file.parameters["functions_share_mesh"] = True
 stress_result_file.parameters["rewrite_function_mesh"] = False
 stress_result_file.parameters["flush_output"] = True
 
-stress = stress_field(
+stress = anba4.stress_field(
     anbax_data,
     [
         1.0,
@@ -91,7 +90,7 @@ stress = stress_field(
     "local",
     "paraview",
 )
-strain = strain_field(
+strain = anba4.strain_field(
     anbax_data,
     [
         1.0,

@@ -23,7 +23,14 @@
 
 from dolfin import *
 from .. import material
-from ..data_model import AnbaData, InputData, FEFunctions, Chains, OutputData, MaterialData
+from ..data_model import (
+    AnbaData,
+    InputData,
+    FEFunctions,
+    Chains,
+    OutputData,
+    MaterialData,
+)
 
 
 def initialize_anba_model(
@@ -34,7 +41,7 @@ def initialize_anba_model(
     plane_orientations,
     fiber_orientations,
     scaling_constraint=1.0,
-    singular=False
+    singular=False,
 ):
     input_data = InputData(
         mesh=mesh,
@@ -44,7 +51,7 @@ def initialize_anba_model(
         fiber_orientations=fiber_orientations,
         plane_orientations=plane_orientations,
         scaling_constraint=scaling_constraint,
-        singular=singular
+        singular=singular,
     )
     fe_functions = FEFunctions(POS=MeshCoordinates(mesh))
     data = AnbaData(
@@ -67,4 +74,3 @@ def initialize_anba_model(
         matLibrary, materials, degree=0
     )
     return data
-

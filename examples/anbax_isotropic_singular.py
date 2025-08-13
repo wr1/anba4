@@ -21,23 +21,11 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import UnitSquareMesh, Constant, MeshFunction, ALE, XDMFFile, parameters
+import dolfin
+import anba4
 
-# from dolfin import compile_extension_module
-
-from anba4 import material
-from anba4 import (
-    initialize_anba_model,
-    initialize_fe_functions,
-    initialize_chains,
-    compute_stiffness,
-    compute_inertia,
-    stress_field,
-    strain_field,
-)
-
-parameters["form_compiler"]["optimize"] = True
-parameters["form_compiler"]["quadrature_degree"] = 2
+dolfin.parameters["form_compiler"]["optimize"] = True
+dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 
@@ -47,26 +35,26 @@ nu = 0.33
 matMechanicProp = [E, nu]
 # Meshing domain.
 
-mesh = UnitSquareMesh(10, 10)
-ALE.move(mesh, Constant([-0.5, -0.5]))
+mesh = dolfin.UnitSquareMesh(10, 10)
+dolfin.ALE.move(mesh, dolfin.Constant([-0.5, -0.5]))
 
 # CompiledSubDomain
-materials = MeshFunction("size_t", mesh, mesh.topology().dim())
-fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
-plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
 
 materials.set_all(0)
 fiber_orientations.set_all(0.0)
 plane_orientations.set_all(90.0)
 
 # Build material property library.
-mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
+mat1 = anba4.material.IsotropicMaterial(matMechanicProp, 1.0)
 
 matLibrary = []
 matLibrary.append(mat1)
 
 
-anbax_data = initialize_anba_model(
+anbax_data = anba4.initialize_anba_model(
     mesh,
     2,
     matLibrary,
@@ -75,29 +63,33 @@ anbax_data = initialize_anba_model(
     fiber_orientations,
     singular=True,
 )
-initialize_fe_functions(anbax_data)
-initialize_chains(anbax_data)
+anba4.initialize_fe_functions(anbax_data)
+anba4.initialize_chains(anbax_data)
 
 # anbax_singular(
 #     mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
 # )
-stiff = compute_stiffness(anbax_data)
+stiff = anba4.compute_stiffness(anbax_data)
 stiff.view()
 
-mass = compute_inertia(anbax_data)
+mass = anba4.compute_inertia(anbax_data)
 mass.view()
 
-stress_result_file = XDMFFile("Stress.xdmf")
+ofile = "stress_iso_singular.xdmf"
+stress_result_file = dolfin.XDMFFile(ofile)
 stress_result_file.parameters["functions_share_mesh"] = True
 stress_result_file.parameters["rewrite_function_mesh"] = False
 stress_result_file.parameters["flush_output"] = True
 
 # anba.stress_field([1., 0., 0.,], [0., 0., 0.], "global", "paraview")
 # stress_result_file.write(anba.STRESS, t = 0.)
-stress = stress_field(
+stress = anba4.stress_field(
     anbax_data,
     [1.0, 0.0, 0.0],
     [0.0, 0.0, 0.0],
     "local",
     "paraview",
 )
+stress_result_file.write(stress, t=0.0)
+
+print(f"Stress field written to file: {ofile}")
