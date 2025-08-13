@@ -21,12 +21,14 @@
 # ----------------------------------------------------------------------
 #
 
-import dolfin as df
+import dolfin
 import numpy as np
-from anba4 import *
 
-df.parameters["form_compiler"]["optimize"] = True
-df.parameters["form_compiler"]["quadrature_degree"] = 2
+# from anba4 import *
+import anba4
+
+dolfin.parameters["form_compiler"]["optimize"] = True
+dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 
@@ -56,17 +58,17 @@ sectionWidth = 3.0023e-2
 sectionHeight = 1.9215e-3
 nPly = 16  # t = 0.2452mm per ply.
 # mesh = RectangleMesh.create([Point(0., 0.), Point(sectionWidth, sectionHeight)], [30, 32], CellType.Type.quadrilateral)
-mesh = df.RectangleMesh(
-    df.Point(0.0, 0.0), df.Point(sectionWidth, sectionHeight), 30, 32, "crossed"
+mesh = dolfin.RectangleMesh(
+    dolfin.Point(0.0, 0.0), dolfin.Point(sectionWidth, sectionHeight), 30, 32, "crossed"
 )
-df.ALE.move(mesh, df.Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
+dolfin.ALE.move(mesh, dolfin.Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
 mesh_points = mesh.coordinates()
 # print(mesh_points)
 
 # CompiledSubDomain
-materials = df.MeshFunction("size_t", mesh, mesh.topology().dim())
-fiber_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
-plane_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
+materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
 # isActive = MeshFunction("bool", mesh, mesh.topology().dim())
 tol = 1e-14
 
@@ -85,85 +87,85 @@ subdomain_1 = CompiledSubDomain(["x[1] >= -6.0*thickness + tol && x[1] <= -5.0*t
                                  "x[1] >= 5.0*thickness + tol && x[1] <= 6.0*thickness + tol"],\
                                   thickness = sectionHeight / nPly, tol=tol)
                                   """
-subdomain_0_p20 = df.CompiledSubDomain(
+subdomain_0_p20 = dolfin.CompiledSubDomain(
     "x[1] >= -8.0*thickness - tol && x[1] <= -7.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_1_m70 = df.CompiledSubDomain(
+subdomain_1_m70 = dolfin.CompiledSubDomain(
     "x[1] >= -7.0*thickness - tol && x[1] <= -6.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_2_m70 = df.CompiledSubDomain(
+subdomain_2_m70 = dolfin.CompiledSubDomain(
     "x[1] >= -6.0*thickness - tol && x[1] <= -5.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_3_p20 = df.CompiledSubDomain(
+subdomain_3_p20 = dolfin.CompiledSubDomain(
     "x[1] >= -5.0*thickness - tol && x[1] <= -4.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
 
-subdomain_4_p20 = df.CompiledSubDomain(
+subdomain_4_p20 = dolfin.CompiledSubDomain(
     "x[1] >= -4.0*thickness - tol && x[1] <= -3.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_5_m70 = df.CompiledSubDomain(
+subdomain_5_m70 = dolfin.CompiledSubDomain(
     "x[1] >= -3.0*thickness - tol && x[1] <= -2.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_6_m70 = df.CompiledSubDomain(
+subdomain_6_m70 = dolfin.CompiledSubDomain(
     "x[1] >= -2.0*thickness - tol && x[1] <= -1.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_7_p20 = df.CompiledSubDomain(
+subdomain_7_p20 = dolfin.CompiledSubDomain(
     "x[1] >= -1.0*thickness - tol && x[1] <= -0.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
 
-subdomain_8_m20 = df.CompiledSubDomain(
+subdomain_8_m20 = dolfin.CompiledSubDomain(
     "x[1] >= 0.0*thickness - tol && x[1] <= 1.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_9_p70 = df.CompiledSubDomain(
+subdomain_9_p70 = dolfin.CompiledSubDomain(
     "x[1] >= 1.0*thickness - tol && x[1] <= 2.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_10_p70 = df.CompiledSubDomain(
+subdomain_10_p70 = dolfin.CompiledSubDomain(
     "x[1] >= 2.0*thickness - tol && x[1] <= 3.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_11_m20 = df.CompiledSubDomain(
+subdomain_11_m20 = dolfin.CompiledSubDomain(
     "x[1] >= 3.0*thickness - tol && x[1] <= 4.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
 
-subdomain_12_m20 = df.CompiledSubDomain(
+subdomain_12_m20 = dolfin.CompiledSubDomain(
     "x[1] >= 4.0*thickness - tol && x[1] <= 5.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_13_p70 = df.CompiledSubDomain(
+subdomain_13_p70 = dolfin.CompiledSubDomain(
     "x[1] >= 5.0*thickness - tol && x[1] <= 6.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_14_p70 = df.CompiledSubDomain(
+subdomain_14_p70 = dolfin.CompiledSubDomain(
     "x[1] >= 6.0*thickness - tol && x[1] <= 7.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
 )
-subdomain_15_m20 = df.CompiledSubDomain(
+subdomain_15_m20 = dolfin.CompiledSubDomain(
     "x[1] >= 7.0*thickness - tol && x[1] <= 8.0*thickness + tol",
     thickness=sectionHeight / nPly,
     tol=tol,
@@ -198,7 +200,7 @@ subdomain_14_p70.mark(fiber_orientations, 70.0)
 subdomain_15_m20.mark(fiber_orientations, -20.0)
 
 # rotate mesh.
-rotate = df.Expression(
+rotate = dolfin.Expression(
     (
         "x[0] * (cos(rotation_angle)-1.0) - x[1] * sin(rotation_angle)",
         "x[0] * sin(rotation_angle) + x[1] * (cos(rotation_angle)-1.0)",
@@ -207,10 +209,10 @@ rotate = df.Expression(
     degree=1,
 )
 
-df.ALE.move(mesh, rotate)
+dolfin.ALE.move(mesh, rotate)
 
 # Build material property library.
-mat1 = OrthotropicMaterial(matMechanicProp)
+mat1 = anba4.material.OrthotropicMaterial(matMechanicProp)
 
 # matMechanicProp1 = matMechanicProp
 # matMechanicProp1[0] = matMechanicProp1[0] / 100.
@@ -222,7 +224,7 @@ matLibrary.append(mat1)
 # matLibrary.append(mat2)
 
 
-anbax_data = initialize_anba_model(
+anbax_data = anba4.initialize_anba_model(
     mesh,
     1,
     matLibrary,
@@ -231,7 +233,7 @@ anbax_data = initialize_anba_model(
     fiber_orientations,
     scaling_constraint=1.0e9,
 )
-initialize_fe_functions(anbax_data)
-initialize_chains(anbax_data)
-stiff = compute_stiffness(anbax_data)
+anba4.initialize_fe_functions(anbax_data)
+anba4.initialize_chains(anbax_data)
+stiff = anba4.compute_stiffness(anbax_data)
 stiff.view()
