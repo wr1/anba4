@@ -19,7 +19,7 @@
 #    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
 #
 # ----------------------------------------------------------------------
-#
+
 
 from dolfin import as_tensor, as_vector
 

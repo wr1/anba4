@@ -3,6 +3,7 @@ import numpy as np
 from dolfin import *
 from anba4 import *
 
+
 def compute_rotation_multimat(singular):
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
@@ -29,28 +30,94 @@ def compute_rotation_multimat(singular):
     sectionWidth = 3.0023e-2
     sectionHeight = 1.9215e-3
     nPly = 16
-    mesh = RectangleMesh(Point(0.0, 0.0), Point(sectionWidth, sectionHeight), 30, 32, "crossed")
+    mesh = RectangleMesh(
+        Point(0.0, 0.0), Point(sectionWidth, sectionHeight), 30, 32, "crossed"
+    )
     ALE.move(mesh, Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
     materials = MeshFunction("size_t", mesh, mesh.topology().dim())
     fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
     plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
     tol = 1e-14
-    subdomain_0_p20 = CompiledSubDomain("x[1] >= -8.0*thickness - tol && x[1] <= -7.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_1_m70 = CompiledSubDomain("x[1] >= -7.0*thickness - tol && x[1] <= -6.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_2_m70 = CompiledSubDomain("x[1] >= -6.0*thickness - tol && x[1] <= -5.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_3_p20 = CompiledSubDomain("x[1] >= -5.0*thickness - tol && x[1] <= -4.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_4_p20 = CompiledSubDomain("x[1] >= -4.0*thickness - tol && x[1] <= -3.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_5_m70 = CompiledSubDomain("x[1] >= -3.0*thickness - tol && x[1] <= -2.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_6_m70 = CompiledSubDomain("x[1] >= -2.0*thickness - tol && x[1] <= -1.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_7_p20 = CompiledSubDomain("x[1] >= -1.0*thickness - tol && x[1] <= -0.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_8_m20 = CompiledSubDomain("x[1] >= 0.0*thickness - tol && x[1] <= 1.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_9_p70 = CompiledSubDomain("x[1] >= 1.0*thickness - tol && x[1] <= 2.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_10_p70 = CompiledSubDomain("x[1] >= 2.0*thickness - tol && x[1] <= 3.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_11_m20 = CompiledSubDomain("x[1] >= 3.0*thickness - tol && x[1] <= 4.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_12_m20 = CompiledSubDomain("x[1] >= 4.0*thickness - tol && x[1] <= 5.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_13_p70 = CompiledSubDomain("x[1] >= 5.0*thickness - tol && x[1] <= 6.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_14_p70 = CompiledSubDomain("x[1] >= 6.0*thickness - tol && x[1] <= 7.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
-    subdomain_15_m20 = CompiledSubDomain("x[1] >= 7.0*thickness - tol && x[1] <= 8.0*thickness + tol", thickness=sectionHeight / nPly, tol=tol)
+    subdomain_0_p20 = CompiledSubDomain(
+        "x[1] >= -8.0*thickness - tol && x[1] <= -7.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_1_m70 = CompiledSubDomain(
+        "x[1] >= -7.0*thickness - tol && x[1] <= -6.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_2_m70 = CompiledSubDomain(
+        "x[1] >= -6.0*thickness - tol && x[1] <= -5.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_3_p20 = CompiledSubDomain(
+        "x[1] >= -5.0*thickness - tol && x[1] <= -4.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_4_p20 = CompiledSubDomain(
+        "x[1] >= -4.0*thickness - tol && x[1] <= -3.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_5_m70 = CompiledSubDomain(
+        "x[1] >= -3.0*thickness - tol && x[1] <= -2.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_6_m70 = CompiledSubDomain(
+        "x[1] >= -2.0*thickness - tol && x[1] <= -1.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_7_p20 = CompiledSubDomain(
+        "x[1] >= -1.0*thickness - tol && x[1] <= -0.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_8_m20 = CompiledSubDomain(
+        "x[1] >= 0.0*thickness - tol && x[1] <= 1.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_9_p70 = CompiledSubDomain(
+        "x[1] >= 1.0*thickness - tol && x[1] <= 2.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_10_p70 = CompiledSubDomain(
+        "x[1] >= 2.0*thickness - tol && x[1] <= 3.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_11_m20 = CompiledSubDomain(
+        "x[1] >= 3.0*thickness - tol && x[1] <= 4.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_12_m20 = CompiledSubDomain(
+        "x[1] >= 4.0*thickness - tol && x[1] <= 5.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_13_p70 = CompiledSubDomain(
+        "x[1] >= 5.0*thickness - tol && x[1] <= 6.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_14_p70 = CompiledSubDomain(
+        "x[1] >= 6.0*thickness - tol && x[1] <= 7.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
+    subdomain_15_m20 = CompiledSubDomain(
+        "x[1] >= 7.0*thickness - tol && x[1] <= 8.0*thickness + tol",
+        thickness=sectionHeight / nPly,
+        tol=tol,
+    )
     rotation_angle = 23.0
     materials.set_all(0)
     fiber_orientations.set_all(0.0)
@@ -72,7 +139,14 @@ def compute_rotation_multimat(singular):
     subdomain_13_p70.mark(fiber_orientations, 70.0)
     subdomain_14_p70.mark(fiber_orientations, 70.0)
     subdomain_15_m20.mark(fiber_orientations, -20.0)
-    rotate = Expression(("x[0] * (cos(rotation_angle)-1.0) - x[1] * sin(rotation_angle)", "x[0] * sin(rotation_angle) + x[1] * (cos(rotation_angle)-1.0)"), rotation_angle=rotation_angle * np.pi / 180.0, degree=1)
+    rotate = Expression(
+        (
+            "x[0] * (cos(rotation_angle)-1.0) - x[1] * sin(rotation_angle)",
+            "x[0] * sin(rotation_angle) + x[1] * (cos(rotation_angle)-1.0)",
+        ),
+        rotation_angle=rotation_angle * np.pi / 180.0,
+        degree=1,
+    )
     ALE.move(mesh, rotate)
     mat1 = material.OrthotropicMaterial(matMechanicProp)
     mat2 = material.IsotropicMaterial(matMechanicProp1)
@@ -93,9 +167,17 @@ def compute_rotation_multimat(singular):
     mass = compute_inertia(anbax_data)
     return stiff.getValues(range(6), range(6)), mass.getValues(range(6), range(6))
 
+
 def test_rotation_multimat_regular_vs_singular():
     stiff_reg, mass_reg = compute_rotation_multimat(False)
     stiff_sing, mass_sing = compute_rotation_multimat(True)
     np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-6)
     np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-6)
 
+
+reference_stiffness_multimat = """4.7732277895589388e+05 1.8729150027703770e+05 -1.0004014718593998e+05 -2.6559245932415263e+02 -1.1191407847951135e+02 -5.5637423163899818e+01 
+1.8729150027544342e+05 1.1559218008656151e+05 -4.2464523090341572e+04 -1.1191407847985531e+02 -4.9444120662803115e+01 -2.3616684972044165e+01 
+-1.0004014718606474e+05 -4.2464523090388793e+04 3.0079557796313870e+06 3.1077650475276408e+02 1.3191679973707500e+02 7.4181837461959606e+02 
+-2.6559245932250809e+02 -1.1191407848226883e+02 3.1077650475272691e+02 3.3857777528704339e+01 -7.7942159205097212e+01 1.5949546221770167e-01 
+-1.1191407848220877e+02 -4.9444120655858107e+01 1.3191679973717240e+02 -7.7942159205096999e+01 1.8439351398588053e+02 6.7701807011101192e-02 
+-5.5637423163929071e+01 -2.3616684971936071e+01 7.4181837461959753e+02 1.5949546221760513e-01 6.7701807011059351e-02 8.3064973690319510e-01  """
