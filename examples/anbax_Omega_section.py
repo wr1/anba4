@@ -21,12 +21,13 @@
 # ----------------------------------------------------------------------
 #
 
-import dolfin as df
-from anba4 import *
+import anba4
+import dolfin
+import anba4
 import mshr
 
-df.parameters["form_compiler"]["optimize"] = True
-df.parameters["form_compiler"]["quadrature_degree"] = 2
+dolfin.parameters["form_compiler"]["optimize"] = True
+dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 
@@ -34,54 +35,54 @@ E = 1.0
 nu = 0.33
 # Assmble into material mechanical property Matrix.
 matMechanicProp = [E, nu]
-# Meshing domain.
 
-Square1 = mshr.Rectangle(df.Point(-40.0, 0.0, 0.0), df.Point(40.0, 30.0, 0.0))
-Square2 = mshr.Rectangle(df.Point(-15.0, -10.0, 0.0), df.Point(15.0, 25.0, 0.0))
-Square3 = mshr.Rectangle(df.Point(-50.0, 5.0, 0.0), df.Point(-20.0, 30.0, 0.0))
-Square4 = mshr.Rectangle(df.Point(20.0, 5.0, 0.0), df.Point(50.0, 30.0, 0.0))
+Square1 = mshr.Rectangle(dolfin.Point(-40.0, 0.0, 0.0), dolfin.Point(40.0, 30.0, 0.0))
+Square2 = mshr.Rectangle(dolfin.Point(-15.0, -10.0, 0.0), dolfin.Point(15.0, 25.0, 0.0))
+Square3 = mshr.Rectangle(dolfin.Point(-50.0, 5.0, 0.0), dolfin.Point(-20.0, 30.0, 0.0))
+Square4 = mshr.Rectangle(dolfin.Point(20.0, 5.0, 0.0), dolfin.Point(50.0, 30.0, 0.0))
 C_shape = Square1 - Square2 - Square3 - Square4
 mesh = mshr.generate_mesh(C_shape, 64)
 
 
-# plot(mesh)
+dolfin.plot(mesh)
 
-# import matplotlib.pyplot as plt
-# plt.show()
+import matplotlib.pyplot as plt
 
+plt.savefig("anbax_Omega_section_mesh.png")
 
 # CompiledSubDomain
-materials = df.MeshFunction("size_t", mesh, mesh.topology().dim())
-fiber_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
-plane_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
+materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
 
 materials.set_all(0)
 fiber_orientations.set_all(0.0)
 plane_orientations.set_all(90.0)
 
 # Build material property library.
-mat1 = IsotropicMaterial(matMechanicProp, 1.0)
+mat1 = anba4.material.IsotropicMaterial(matMechanicProp, 1.0)
 
 matLibrary = []
 matLibrary.append(mat1)
 
-anbax_data = initialize_anba_model(
+anbax_data = anba4.initialize_anba_model(
     mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
 )
-initialize_fe_functions(anbax_data)
-initialize_chains(anbax_data)
-stiff = compute_stiffness(anbax_data)
+anba4.initialize_fe_functions(anbax_data)
+anba4.initialize_chains(anbax_data)
+stiff = anba4.compute_stiffness(anbax_data)
 stiff.view()
 
-mass = compute_inertia(anbax_data)
+mass = anba4.compute_inertia(anbax_data)
 mass.view()
 
-stress_result_file = df.XDMFFile("Stress.xdmf")
+output_file = "anbax_Omega_section.xdmf"
+stress_result_file = dolfin.XDMFFile(output_file)
 stress_result_file.parameters["functions_share_mesh"] = True
 stress_result_file.parameters["rewrite_function_mesh"] = False
 stress_result_file.parameters["flush_output"] = True
 
-stress = stress_field(
+stress = anba4.stress_field(
     anbax_data,
     [
         1.0,
@@ -93,3 +94,5 @@ stress = stress_field(
     "paraview",
 )
 stress_result_file.write(stress, t=0.0)
+
+print(f"Stress field written to file: {output_file}")

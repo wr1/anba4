@@ -21,11 +21,12 @@
 # ----------------------------------------------------------------------
 #
 
-import dolfin as df
-from anba4 import *
+import dolfin
+import anba4
+from matplotlib import pyplot as plt
 
-df.parameters["form_compiler"]["optimize"] = True
-df.parameters["form_compiler"]["quadrature_degree"] = 2
+dolfin.parameters["form_compiler"]["optimize"] = True
+dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 matMechanicProp1 = [80000, 0.3]
@@ -37,20 +38,20 @@ sectionWidth = 20
 sectionHeight = 20
 
 # mesh = RectangleMesh.create([Point(0., 0.), Point(sectionWidth, sectionHeight)], [30, 32], CellType.Type.quadrilateral)
-mesh = df.RectangleMesh(
-    df.Point(0.0, 0.0), df.Point(sectionWidth, sectionHeight), 50, 50, "crossed"
+mesh = dolfin.RectangleMesh(
+    dolfin.Point(0.0, 0.0), dolfin.Point(sectionWidth, sectionHeight), 50, 50, "crossed"
 )
-df.ALE.move(mesh, df.Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
+dolfin.ALE.move(mesh, dolfin.Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
 
 # CompiledSubDomain
-materials = df.MeshFunction("size_t", mesh, mesh.topology().dim())
-fiber_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
-plane_orientations = df.MeshFunction("double", mesh, mesh.topology().dim())
+materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
 # isActive = MeshFunction("bool", mesh, mesh.topology().dim())
 tol = 1e-14
 
-lower_portion = df.CompiledSubDomain("x[1] <= 0 + tol", tol=tol)
-hole = df.CompiledSubDomain(
+lower_portion = dolfin.CompiledSubDomain("x[1] <= 0 + tol", tol=tol)
+hole = dolfin.CompiledSubDomain(
     "(x[1] >= -6 + tol && x[1] <= 6. + tol)&&(x[0] >= -2 + tol && x[0] <= 2. + tol)",
     tol=tol,
 )
@@ -63,20 +64,20 @@ plane_orientations.set_all(rotation_angle)
 
 lower_portion.mark(materials, 1)
 hole.mark(materials, 2)
-plot(materials, "Subdomains")
-# plt.show()
+dolfin.plot(materials, "Subdomains")
+plt.show()
 
 # rotate mesh.
-mat1 = IsotropicMaterial(matMechanicProp1)
-mat2 = IsotropicMaterial(matMechanicProp2)
-mat3 = IsotropicMaterial(matMechanicProp3)
+mat1 = anba4.material.IsotropicMaterial(matMechanicProp1)
+mat2 = anba4.material.IsotropicMaterial(matMechanicProp2)
+mat3 = anba4.material.IsotropicMaterial(matMechanicProp3)
 matLibrary = []
 matLibrary.append(mat1)
 matLibrary.append(mat2)
 matLibrary.append(mat3)
 
 
-anbax_data = initialize_anba_model(
+anbax_data = anba4.initialize_anba_model(
     mesh,
     1,
     matLibrary,
@@ -85,22 +86,26 @@ anbax_data = initialize_anba_model(
     fiber_orientations,
     scaling_constraint=1,
 )
-initialize_fe_functions(anbax_data)
-initialize_chains(anbax_data)
-stiff = compute_stiffness(anbax_data)
+anba4.initialize_fe_functions(anbax_data)
+anba4.initialize_chains(anbax_data)
+stiff = anba4.compute_stiffness(anbax_data)
 stiff.view()
 
-JordanChains = df.XDMFFile("jordan_chains_with_real_hole.xdmf")
+
+output_file = "anbax_multimat_with_hole.xdmf"
+JordanChains = dolfin.XDMFFile(output_file)
 JordanChains.parameters["functions_share_mesh"] = True
 JordanChains.parameters["rewrite_function_mesh"] = False
 JordanChains.parameters["flush_output"] = True
 for i in range(len(anbax_data.chains.chains_d)):
     for j in range(len(anbax_data.chains.chains_d[i])):
         # print('chain_'+str(i)+'_'+str(j))
-        chain = df.Function(
+        chain = dolfin.Function(
             anbax_data.fe_functions.UF3, name="chain_" + str(i) + "_" + str(j)
         )
-        chain.vector()[:] = df.project(
+        chain.vector()[:] = dolfin.project(
             anbax_data.chains.chains_d[i][j], anbax_data.fe_functions.UF3
         ).vector()
         JordanChains.write(chain, t=0.0)
+
+print(f"Jordan chains written to file: {output_file}")
