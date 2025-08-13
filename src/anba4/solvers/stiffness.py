@@ -43,7 +43,7 @@ import numpy as np
 from typing import Any
 
 from ..utils import Sigma, pos3d
-from ..data_model import AnbaData
+from ..data.data_model import AnbaData
 
 
 def compute_stiffness(data: AnbaData) -> Any:

@@ -29,7 +29,7 @@ from ..voight_notation import (
     strainTensorToStrainVector,
     strainTensorToParaviewStrainVector,
 )
-from ..data_model import AnbaData
+from ..data.data_model import AnbaData
 
 
 def strain_field(

@@ -27,7 +27,7 @@ from petsc4py import PETSc
 from typing import Any
 
 from ..utils import pos3d
-from ..data_model import AnbaData
+from ..data.data_model import AnbaData
 
 
 def compute_inertia(data: AnbaData) -> Any:

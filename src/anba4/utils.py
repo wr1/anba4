@@ -7,7 +7,7 @@ from .voight_notation import (
     strainVectorToStrainTensor,
     strainTensorToStrainVector,
 )
-from .data_model import AnbaData
+from .data.data_model import AnbaData
 
 
 def ComputeShearCenter(stiff_matrix):

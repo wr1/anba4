@@ -29,7 +29,7 @@ from ..voight_notation import (
     stressTensorToStressVector,
     stressTensorToParaviewStressVector,
 )
-from ..data_model import AnbaData
+from ..data.data_model import AnbaData
 
 
 def stress_field(

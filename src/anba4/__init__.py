@@ -8,4 +8,4 @@ from .solvers.strain import strain_field
 from .voight_notation import *
 from .material import *
 from .utils import *
-from .data_model import AnbaData
+from .data.data_model import AnbaData

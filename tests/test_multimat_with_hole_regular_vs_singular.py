@@ -3,6 +3,7 @@ import numpy as np
 from dolfin import *
 from anba4 import *
 
+
 def compute_multimat_with_hole(singular):
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
@@ -11,14 +12,19 @@ def compute_multimat_with_hole(singular):
     matMechanicProp3 = [80000 * 0.00001, 0.3]
     sectionWidth = 20
     sectionHeight = 20
-    mesh = RectangleMesh(Point(0.0, 0.0), Point(sectionWidth, sectionHeight), 50, 50, "crossed")
+    mesh = RectangleMesh(
+        Point(0.0, 0.0), Point(sectionWidth, sectionHeight), 50, 50, "crossed"
+    )
     ALE.move(mesh, Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
     materials = MeshFunction("size_t", mesh, mesh.topology().dim())
     fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
     plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
     tol = 1e-14
     lower_portion = CompiledSubDomain("x[1] <= 0 + tol", tol=tol)
-    hole = CompiledSubDomain("(x[1] >= -6 + tol && x[1] <= 6. + tol)&&(x[0] >= -2 + tol && x[0] <= 2. + tol)", tol=tol)
+    hole = CompiledSubDomain(
+        "(x[1] >= -6 + tol && x[1] <= 6. + tol)&&(x[0] >= -2 + tol && x[0] <= 2. + tol)",
+        tol=tol,
+    )
     rotation_angle = 0.0
     materials.set_all(0)
     fiber_orientations.set_all(0.0)
@@ -45,9 +51,17 @@ def compute_multimat_with_hole(singular):
     mass = compute_inertia(anbax_data)
     return stiff.getValues(range(6), range(6)), mass.getValues(range(6), range(6))
 
+
 def test_multimat_with_hole_regular_vs_singular():
     stiff_reg, mass_reg = compute_multimat_with_hole(False)
     stiff_sing, mass_sing = compute_multimat_with_hole(True)
     np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-5)
     np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-5)
 
+
+reference_stiffness = """3.6562114259374999e+06 -1.5183600001400947e+02 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 -1.0100430033504009e+07 
+-1.5183599999479526e+02 5.8959962322773710e+06 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 -1.6802264333052363e+05 
+0.0000000000000000e+00 0.0000000000000000e+00 2.1380834623998445e+07 3.7074245235198796e+07 3.9242147413326200e+05 0.0000000000000000e+00 
+0.0000000000000000e+00 0.0000000000000000e+00 3.7074245235198833e+07 7.6962684297902262e+08 4.3342801843087474e+05 0.0000000000000000e+00 
+0.0000000000000000e+00 0.0000000000000000e+00 3.9242147413333762e+05 4.3342801843092334e+05 7.9701404452929175e+08 0.0000000000000000e+00 
+-1.0100430033504205e+07 -1.6802264333054138e+05 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 4.7752291234080762e+08 """

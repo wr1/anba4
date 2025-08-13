@@ -22,7 +22,7 @@
 #
 
 from dolfin import *
-from ..data_model import AnbaData
+from ..data.data_model import AnbaData
 
 
 def initialize_fe_functions(data: AnbaData) -> AnbaData:

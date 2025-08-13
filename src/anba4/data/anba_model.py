@@ -23,7 +23,7 @@
 
 from dolfin import *
 from .. import material
-from ..data_model import (
+from .data_model import (
     AnbaData,
     InputData,
     FEFunctions,
