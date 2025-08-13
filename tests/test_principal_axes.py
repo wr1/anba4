@@ -11,7 +11,8 @@ def parse_matrix(ref_str):
     return mat
 
 
-def compute_principal_axes(singular):
+@pytest.fixture(scope="module")
+def principal_axes_data():
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
     E = 1.0
@@ -38,36 +39,83 @@ def compute_principal_axes(singular):
     plane_orientations.set_all(90.0)
     mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
     matLibrary = [mat1]
-    anbax_data = initialize_anba_model(
-        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=singular
+
+    # Regular
+    anbax_data_reg = initialize_anba_model(
+        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=False
     )
-    initialize_fe_functions(anbax_data)
-    initialize_chains(anbax_data)
-    stiff = compute_stiffness(anbax_data)
-    mass = compute_inertia(anbax_data)
-    stiff_mat = stiff.getValues(range(6), range(6))
-    decoupled_stiff = utils.DecoupleStiffness(stiff_mat)
-    mass_mat = mass.getValues(range(6), range(6))
-    angle = utils.PrincipalAxesRotationAngle(decoupled_stiff)
-    return stiff_mat, mass_mat, decoupled_stiff, angle
+    initialize_fe_functions(anbax_data_reg)
+    initialize_chains(anbax_data_reg)
+    stiff_reg = compute_stiffness(anbax_data_reg)
+    mass_reg = compute_inertia(anbax_data_reg)
+    stiff_mat_reg = stiff_reg.getValues(range(6), range(6))
+    decoupled_stiff_reg = utils.DecoupleStiffness(stiff_mat_reg)
+    mass_mat_reg = mass_reg.getValues(range(6), range(6))
+    angle_reg = utils.PrincipalAxesRotationAngle(decoupled_stiff_reg)
+
+    # Singular
+    anbax_data_sing = initialize_anba_model(
+        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=True
+    )
+    initialize_fe_functions(anbax_data_sing)
+    initialize_chains(anbax_data_sing)
+    stiff_sing = compute_stiffness(anbax_data_sing)
+    mass_sing = compute_inertia(anbax_data_sing)
+    stiff_mat_sing = stiff_sing.getValues(range(6), range(6))
+    decoupled_stiff_sing = utils.DecoupleStiffness(stiff_mat_sing)
+    mass_mat_sing = mass_sing.getValues(range(6), range(6))
+    angle_sing = utils.PrincipalAxesRotationAngle(decoupled_stiff_sing)
+
+    return {
+        'stiff_reg': stiff_mat_reg,
+        'stiff_sing': stiff_mat_sing,
+        'mass_reg': mass_mat_reg,
+        'mass_sing': mass_mat_sing,
+        'dec_stiff_reg': decoupled_stiff_reg,
+        'dec_stiff_sing': decoupled_stiff_sing,
+        'angle_reg': angle_reg,
+        'angle_sing': angle_sing
+    }
 
 
-def test_principal_axes():
-    stiff_reg, mass_reg, dec_reg, angle_reg = compute_principal_axes(False)
-    stiff_sing, mass_sing, dec_sing, angle_sing = compute_principal_axes(True)
-    np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-6)
-    np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-6)
-    np.testing.assert_allclose(dec_reg, dec_sing, atol=1e-6)
-    np.testing.assert_allclose(angle_reg, angle_sing, atol=1e-6)
+def test_principal_axes_stiffness_regular_vs_singular(principal_axes_data):
+    np.testing.assert_allclose(principal_axes_data['stiff_reg'], principal_axes_data['stiff_sing'], atol=1e-6)
+
+
+def test_principal_axes_mass_regular_vs_singular(principal_axes_data):
+    np.testing.assert_allclose(principal_axes_data['mass_reg'], principal_axes_data['mass_sing'], atol=1e-6)
+
+
+def test_principal_axes_dec_stiff_regular_vs_singular(principal_axes_data):
+    np.testing.assert_allclose(principal_axes_data['dec_stiff_reg'], principal_axes_data['dec_stiff_sing'], atol=1e-6)
+
+
+def test_principal_axes_angle_regular_vs_singular(principal_axes_data):
+    np.testing.assert_allclose(principal_axes_data['angle_reg'], principal_axes_data['angle_sing'], atol=1e-6)
+
+
+def test_principal_axes_stiffness_reference(principal_axes_data):
     ref_stiff = parse_matrix(reference_stiffness)
+    np.testing.assert_allclose(principal_axes_data['stiff_reg'], ref_stiff, atol=1e-6)
+
+
+def test_principal_axes_mass_reference(principal_axes_data):
     ref_mass = parse_matrix(reference_mass)
+    np.testing.assert_allclose(principal_axes_data['mass_reg'], ref_mass, atol=1e-6)
+
+
+def test_principal_axes_dec_stiff_reference(principal_axes_data):
     ref_dec = parse_matrix(decoupled_stiffness)
-    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-6)
-    np.testing.assert_allclose(mass_reg, ref_mass, atol=1e-6)
-    np.testing.assert_allclose(dec_reg, ref_dec, atol=1e-6)
-    np.testing.assert_allclose(angle_reg * 180 / np.pi, rotation_angle, atol=1e-3)
-    np.testing.assert_allclose(dec_reg[0:3, 3:6], np.zeros((3, 3)), atol=1e-6)
-    np.testing.assert_allclose(dec_reg[3:6, 0:3], np.zeros((3, 3)), atol=1e-6)
+    np.testing.assert_allclose(principal_axes_data['dec_stiff_reg'], ref_dec, atol=1e-6)
+
+
+def test_principal_axes_angle_reference(principal_axes_data):
+    np.testing.assert_allclose(principal_axes_data['angle_reg'] * 180 / np.pi, rotation_angle, atol=1e-3)
+
+
+def test_principal_axes_dec_stiff_zeros(principal_axes_data):
+    np.testing.assert_allclose(principal_axes_data['dec_stiff_reg'][0:3, 3:6], np.zeros((3, 3)), atol=1e-6)
+    np.testing.assert_allclose(principal_axes_data['dec_stiff_reg'][3:6, 0:3], np.zeros((3, 3)), atol=1e-6)
 
 
 reference_stiffness = """4.9983692051719798e-02 -6.4216083302349259e-03 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 -6.0014130758270327e-02 

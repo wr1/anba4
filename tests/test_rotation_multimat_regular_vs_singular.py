@@ -10,7 +10,8 @@ def parse_matrix(ref_str):
     return mat
 
 
-def compute_rotation_multimat(singular):
+@pytest.fixture(scope="module")
+def rotation_multimat_data():
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
     e_xx = 9.8e9
@@ -157,30 +158,48 @@ def compute_rotation_multimat(singular):
     mat1 = material.OrthotropicMaterial(matMechanicProp)
     mat2 = material.IsotropicMaterial(matMechanicProp1)
     matLibrary = [mat1, mat2]
-    anbax_data = initialize_anba_model(
-        mesh,
-        1,
-        matLibrary,
-        materials,
-        plane_orientations,
-        fiber_orientations,
-        singular=singular,
-        scaling_constraint=1.0e9,
+
+    # Regular
+    anbax_data_reg = initialize_anba_model(
+        mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, singular=False, scaling_constraint=1.0e9
     )
-    initialize_fe_functions(anbax_data)
-    initialize_chains(anbax_data)
-    stiff = compute_stiffness(anbax_data)
-    mass = compute_inertia(anbax_data)
-    return stiff.getValues(range(6), range(6)), mass.getValues(range(6), range(6))
+    initialize_fe_functions(anbax_data_reg)
+    initialize_chains(anbax_data_reg)
+    stiff_reg = compute_stiffness(anbax_data_reg)
+    mass_reg = compute_inertia(anbax_data_reg)
+    stiff_mat_reg = stiff_reg.getValues(range(6), range(6))
+    mass_mat_reg = mass_reg.getValues(range(6), range(6))
+
+    # Singular
+    anbax_data_sing = initialize_anba_model(
+        mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, singular=True, scaling_constraint=1.0e9
+    )
+    initialize_fe_functions(anbax_data_sing)
+    initialize_chains(anbax_data_sing)
+    stiff_sing = compute_stiffness(anbax_data_sing)
+    mass_sing = compute_inertia(anbax_data_sing)
+    stiff_mat_sing = stiff_sing.getValues(range(6), range(6))
+    mass_mat_sing = mass_sing.getValues(range(6), range(6))
+
+    return {
+        'stiff_reg': stiff_mat_reg,
+        'stiff_sing': stiff_mat_sing,
+        'mass_reg': mass_mat_reg,
+        'mass_sing': mass_mat_sing
+    }
 
 
-def test_rotation_multimat_regular_vs_singular():
-    stiff_reg, mass_reg = compute_rotation_multimat(False)
-    stiff_sing, mass_sing = compute_rotation_multimat(True)
-    np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-6)
-    np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-6)
+def test_rotation_multimat_stiffness_regular_vs_singular(rotation_multimat_data):
+    np.testing.assert_allclose(rotation_multimat_data['stiff_reg'], rotation_multimat_data['stiff_sing'], atol=1e-6)
+
+
+def test_rotation_multimat_mass_regular_vs_singular(rotation_multimat_data):
+    np.testing.assert_allclose(rotation_multimat_data['mass_reg'], rotation_multimat_data['mass_sing'], atol=1e-6)
+
+
+def test_rotation_multimat_stiffness_reference(rotation_multimat_data):
     ref_stiff = parse_matrix(reference_stiffness_multimat)
-    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-6)
+    np.testing.assert_allclose(rotation_multimat_data['stiff_reg'], ref_stiff, atol=1e-6)
 
 
 reference_stiffness_multimat = """4.7732277895589388e+05 1.8729150027703770e+05 -1.0004014718593998e+05 -2.6559245932415263e+02 -1.1191407847951135e+02 -5.5637423163899818e+01 

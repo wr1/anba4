@@ -10,7 +10,8 @@ def parse_matrix(ref_str):
     return mat
 
 
-def compute_rotation(singular):
+@pytest.fixture(scope="module")
+def rotation_data():
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
     e_xx = 9.8e9
@@ -154,30 +155,48 @@ def compute_rotation(singular):
     ALE.move(mesh, rotate)
     mat1 = material.OrthotropicMaterial(matMechanicProp)
     matLibrary = [mat1]
-    anbax_data = initialize_anba_model(
-        mesh,
-        1,
-        matLibrary,
-        materials,
-        plane_orientations,
-        fiber_orientations,
-        singular=singular,
-        scaling_constraint=1.0e9,
+
+    # Regular
+    anbax_data_reg = initialize_anba_model(
+        mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, singular=False, scaling_constraint=1.0e9
     )
-    initialize_fe_functions(anbax_data)
-    initialize_chains(anbax_data)
-    stiff = compute_stiffness(anbax_data)
-    mass = compute_inertia(anbax_data)
-    return stiff.getValues(range(6), range(6)), mass.getValues(range(6), range(6))
+    initialize_fe_functions(anbax_data_reg)
+    initialize_chains(anbax_data_reg)
+    stiff_reg = compute_stiffness(anbax_data_reg)
+    mass_reg = compute_inertia(anbax_data_reg)
+    stiff_mat_reg = stiff_reg.getValues(range(6), range(6))
+    mass_mat_reg = mass_reg.getValues(range(6), range(6))
+
+    # Singular
+    anbax_data_sing = initialize_anba_model(
+        mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, singular=True, scaling_constraint=1.0e9
+    )
+    initialize_fe_functions(anbax_data_sing)
+    initialize_chains(anbax_data_sing)
+    stiff_sing = compute_stiffness(anbax_data_sing)
+    mass_sing = compute_inertia(anbax_data_sing)
+    stiff_mat_sing = stiff_sing.getValues(range(6), range(6))
+    mass_mat_sing = mass_sing.getValues(range(6), range(6))
+
+    return {
+        'stiff_reg': stiff_mat_reg,
+        'stiff_sing': stiff_mat_sing,
+        'mass_reg': mass_mat_reg,
+        'mass_sing': mass_mat_sing
+    }
 
 
-def test_rotation_regular_vs_singular():
-    stiff_reg, mass_reg = compute_rotation(False)
-    stiff_sing, mass_sing = compute_rotation(True)
-    np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-5)
-    np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-5)
+def test_rotation_stiffness_regular_vs_singular(rotation_data):
+    np.testing.assert_allclose(rotation_data['stiff_reg'], rotation_data['stiff_sing'], atol=1e-5)
+
+
+def test_rotation_mass_regular_vs_singular(rotation_data):
+    np.testing.assert_allclose(rotation_data['mass_reg'], rotation_data['mass_sing'], atol=1e-5)
+
+
+def test_rotation_stiffness_reference(rotation_data):
     ref_stiff = parse_matrix(reference_rotation)
-    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-5)
+    np.testing.assert_allclose(rotation_data['stiff_reg'], ref_stiff, atol=1e-5)
 
 
 reference_rotation = """5.9898449578112806e+05 -1.7724237108734714e-08 1.1500601625315664e-08 -4.1049059250476665e+02 6.4406313317207103e-11 -1.7332964943005700e-10 

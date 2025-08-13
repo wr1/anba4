@@ -10,7 +10,8 @@ def parse_matrix(ref_str):
     return mat
 
 
-def compute_isotropic(singular):
+@pytest.fixture(scope="module")
+def isotropic_data():
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
     E = 1.0
@@ -26,31 +27,53 @@ def compute_isotropic(singular):
     plane_orientations.set_all(90.0)
     mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
     matLibrary = [mat1]
-    anbax_data = initialize_anba_model(
-        mesh,
-        2,
-        matLibrary,
-        materials,
-        plane_orientations,
-        fiber_orientations,
-        singular=singular,
+
+    # Regular
+    anbax_data_reg = initialize_anba_model(
+        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=False
     )
-    initialize_fe_functions(anbax_data)
-    initialize_chains(anbax_data)
-    stiff = compute_stiffness(anbax_data)
-    mass = compute_inertia(anbax_data)
-    return stiff.getValues(range(6), range(6)), mass.getValues(range(6), range(6))
+    initialize_fe_functions(anbax_data_reg)
+    initialize_chains(anbax_data_reg)
+    stiff_reg = compute_stiffness(anbax_data_reg)
+    mass_reg = compute_inertia(anbax_data_reg)
+    stiff_mat_reg = stiff_reg.getValues(range(6), range(6))
+    mass_mat_reg = mass_reg.getValues(range(6), range(6))
+
+    # Singular
+    anbax_data_sing = initialize_anba_model(
+        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=True
+    )
+    initialize_fe_functions(anbax_data_sing)
+    initialize_chains(anbax_data_sing)
+    stiff_sing = compute_stiffness(anbax_data_sing)
+    mass_sing = compute_inertia(anbax_data_sing)
+    stiff_mat_sing = stiff_sing.getValues(range(6), range(6))
+    mass_mat_sing = mass_sing.getValues(range(6), range(6))
+
+    return {
+        'stiff_reg': stiff_mat_reg,
+        'stiff_sing': stiff_mat_sing,
+        'mass_reg': mass_mat_reg,
+        'mass_sing': mass_mat_sing
+    }
 
 
-def test_isotropic_regular_vs_singular():
-    stiff_reg, mass_reg = compute_isotropic(False)
-    stiff_sing, mass_sing = compute_isotropic(True)
-    np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-6)
-    np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-6)
+def test_isotropic_stiffness_regular_vs_singular(isotropic_data):
+    np.testing.assert_allclose(isotropic_data['stiff_reg'], isotropic_data['stiff_sing'], atol=1e-6)
+
+
+def test_isotropic_mass_regular_vs_singular(isotropic_data):
+    np.testing.assert_allclose(isotropic_data['mass_reg'], isotropic_data['mass_sing'], atol=1e-6)
+
+
+def test_isotropic_stiffness_reference(isotropic_data):
     ref_stiff = parse_matrix(reference_stiffness)
+    np.testing.assert_allclose(isotropic_data['stiff_reg'], ref_stiff, atol=1e-6)
+
+
+def test_isotropic_mass_reference(isotropic_data):
     ref_mass = parse_matrix(reference_mass)
-    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-6)
-    np.testing.assert_allclose(mass_reg, ref_mass, atol=1e-6)
+    np.testing.assert_allclose(isotropic_data['mass_reg'], ref_mass, atol=1e-6)
 
 
 reference_stiffness = """3.1106440126718432e-01 -5.7626764670407046e-07 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 1.8332325847382240e-16 

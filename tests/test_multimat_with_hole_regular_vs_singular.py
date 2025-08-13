@@ -10,7 +10,8 @@ def parse_matrix(ref_str):
     return mat
 
 
-def compute_multimat_with_hole(singular):
+@pytest.fixture(scope="module")
+def multimat_with_hole_data():
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
     matMechanicProp1 = [80000, 0.3]
@@ -41,30 +42,48 @@ def compute_multimat_with_hole(singular):
     mat2 = material.IsotropicMaterial(matMechanicProp2)
     mat3 = material.IsotropicMaterial(matMechanicProp3)
     matLibrary = [mat1, mat2, mat3]
-    anbax_data = initialize_anba_model(
-        mesh,
-        1,
-        matLibrary,
-        materials,
-        plane_orientations,
-        fiber_orientations,
-        singular=singular,
-        scaling_constraint=1,
+
+    # Regular
+    anbax_data_reg = initialize_anba_model(
+        mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, singular=False, scaling_constraint=1
     )
-    initialize_fe_functions(anbax_data)
-    initialize_chains(anbax_data)
-    stiff = compute_stiffness(anbax_data)
-    mass = compute_inertia(anbax_data)
-    return stiff.getValues(range(6), range(6)), mass.getValues(range(6), range(6))
+    initialize_fe_functions(anbax_data_reg)
+    initialize_chains(anbax_data_reg)
+    stiff_reg = compute_stiffness(anbax_data_reg)
+    mass_reg = compute_inertia(anbax_data_reg)
+    stiff_mat_reg = stiff_reg.getValues(range(6), range(6))
+    mass_mat_reg = mass_reg.getValues(range(6), range(6))
+
+    # Singular
+    anbax_data_sing = initialize_anba_model(
+        mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, singular=True, scaling_constraint=1
+    )
+    initialize_fe_functions(anbax_data_sing)
+    initialize_chains(anbax_data_sing)
+    stiff_sing = compute_stiffness(anbax_data_sing)
+    mass_sing = compute_inertia(anbax_data_sing)
+    stiff_mat_sing = stiff_sing.getValues(range(6), range(6))
+    mass_mat_sing = mass_sing.getValues(range(6), range(6))
+
+    return {
+        'stiff_reg': stiff_mat_reg,
+        'stiff_sing': stiff_mat_sing,
+        'mass_reg': mass_mat_reg,
+        'mass_sing': mass_mat_sing
+    }
 
 
-def test_multimat_with_hole_regular_vs_singular():
-    stiff_reg, mass_reg = compute_multimat_with_hole(False)
-    stiff_sing, mass_sing = compute_multimat_with_hole(True)
-    np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-5)
-    np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-5)
+def test_multimat_with_hole_stiffness_regular_vs_singular(multimat_with_hole_data):
+    np.testing.assert_allclose(multimat_with_hole_data['stiff_reg'], multimat_with_hole_data['stiff_sing'], atol=1e-5)
+
+
+def test_multimat_with_hole_mass_regular_vs_singular(multimat_with_hole_data):
+    np.testing.assert_allclose(multimat_with_hole_data['mass_reg'], multimat_with_hole_data['mass_sing'], atol=1e-5)
+
+
+def test_multimat_with_hole_stiffness_reference(multimat_with_hole_data):
     ref_stiff = parse_matrix(reference_stiffness)
-    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-5)
+    np.testing.assert_allclose(multimat_with_hole_data['stiff_reg'], ref_stiff, atol=1e-5)
 
 
 reference_stiffness = """3.6562114259374999e+06 -1.5183600001400947e+02 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 -1.0100430033504009e+07 
