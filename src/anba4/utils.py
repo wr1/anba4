@@ -1,19 +1,7 @@
 import numpy as np
-from dolfin import (
-    as_vector,
-    as_tensor,
-    grad,
-    # stressVectorToStressTensor,
-    as_matrix,
-    LocalSolver,
-    Function,
-    TrialFunction,
-    TestFunction,
-    inner,
-    dx,
-    # strainVectorToStrainTensor,
-    # strainTensorToStrainVector,
-)
+import dolfin
+
+
 from .voight_notation import (
     stressVectorToStressTensor,
     strainVectorToStrainTensor,
@@ -77,8 +65,8 @@ def pos3d(POS):
 
 def grad3d(u, up):
     "Return 3d gradient."
-    g = grad(u)
-    return as_tensor(
+    g = dolfin.grad(u)
+    return dolfin.as_tensor(
         [
             [g[0, 0], g[0, 1], up[0]],
             [g[1, 0], g[1, 1], up[1]],
@@ -89,7 +77,7 @@ def grad3d(u, up):
 
 def epsilon(u, up):
     "Return symmetric 3D infinitesimal strain tensor."
-    g3 = grad3d(u, up)
+    g3 = dolfin.grad3d(u, up)
     return 0.5 * (g3.T + g3)
 
 
@@ -97,7 +85,7 @@ def rotated_epsilon(data: AnbaData, u, up):
     "Return symmetric 3D infinitesimal strain tensor rotated into material reference."
     eps = epsilon(u, up)
     rot = data.material_data.MaterialRotation_matrix
-    rotMatrix = as_matrix(
+    rotMatrix = dolfin.as_matrix(
         (
             (rot[0], rot[1], rot[2], rot[3], rot[4], rot[5]),
             (rot[6], rot[7], rot[8], rot[9], rot[10], rot[11]),
@@ -115,7 +103,7 @@ def sigma_helper(mod, u, up):
     "Return second Piola-Kirchhoff stress tensor."
     et = epsilon(u, up)
     ev = strainTensorToStrainVector(et)
-    elasticMatrix = as_matrix(
+    elasticMatrix = dolfin.as_matrix(
         (
             (mod[0], mod[1], mod[2], mod[3], mod[4], mod[5]),
             (mod[6], mod[7], mod[8], mod[9], mod[10], mod[11]),
@@ -142,14 +130,14 @@ def RotatedSigma(data: AnbaData, u, up):
 
 def local_project(v, V, u=None):
     """Element-wise projection using LocalSolver"""
-    dv = TrialFunction(V)
-    v_ = TestFunction(V)
-    a_proj = inner(dv, v_) * dx
-    b_proj = inner(v, v_) * dx
-    solver = LocalSolver(a_proj, b_proj)
+    dv = dolfin.TrialFunction(V)
+    v_ = dolfin.TestFunction(V)
+    a_proj = dolfin.inner(dv, v_) * dolfin.dx
+    b_proj = dolfin.inner(v, v_) * dolfin.dx
+    solver = dolfin.LocalSolver(a_proj, b_proj)
     solver.factorize()
     if u is None:
-        u = Function(V)
+        u = dolfin.Function(V)
         solver.solve_local_rhs(u)
         return u
     else:
