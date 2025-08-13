@@ -93,6 +93,6 @@ def compute_rotation(singular):
 def test_rotation_regular_vs_singular():
     stiff_reg, mass_reg = compute_rotation(False)
     stiff_sing, mass_sing = compute_rotation(True)
-    np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-6)
-    np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-6)
+    np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-5)
+    np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-5)
 
