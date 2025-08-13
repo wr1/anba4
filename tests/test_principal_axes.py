@@ -5,7 +5,13 @@ from anba4 import *
 import mshr
 
 
-def test_principal_axes():
+def parse_matrix(ref_str):
+    lines = ref_str.strip().split('\n')
+    mat = np.array([list(map(float, line.split())) for line in lines if line.strip()])
+    return mat
+
+
+def compute_principal_axes(singular):
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
     E = 1.0
@@ -33,17 +39,35 @@ def test_principal_axes():
     mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
     matLibrary = [mat1]
     anbax_data = initialize_anba_model(
-        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
+        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=singular
     )
     initialize_fe_functions(anbax_data)
     initialize_chains(anbax_data)
     stiff = compute_stiffness(anbax_data)
+    mass = compute_inertia(anbax_data)
     stiff_mat = stiff.getValues(range(6), range(6))
     decoupled_stiff = utils.DecoupleStiffness(stiff_mat)
+    mass_mat = mass.getValues(range(6), range(6))
     angle = utils.PrincipalAxesRotationAngle(decoupled_stiff)
-    np.testing.assert_allclose(angle * 180 / np.pi, 30, atol=1e-3)
-    np.testing.assert_allclose(decoupled_stiff[0:3, 3:6], np.zeros((3, 3)), atol=1e-6)
-    np.testing.assert_allclose(decoupled_stiff[3:6, 0:3], np.zeros((3, 3)), atol=1e-6)
+    return stiff_mat, mass_mat, decoupled_stiff, angle
+
+
+def test_principal_axes():
+    stiff_reg, mass_reg, dec_reg, angle_reg = compute_principal_axes(False)
+    stiff_sing, mass_sing, dec_sing, angle_sing = compute_principal_axes(True)
+    np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-6)
+    np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-6)
+    np.testing.assert_allclose(dec_reg, dec_sing, atol=1e-6)
+    np.testing.assert_allclose(angle_reg, angle_sing, atol=1e-6)
+    ref_stiff = parse_matrix(reference_stiffness)
+    ref_mass = parse_matrix(reference_mass)
+    ref_dec = parse_matrix(decoupled_stiffness)
+    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-6)
+    np.testing.assert_allclose(mass_reg, ref_mass, atol=1e-6)
+    np.testing.assert_allclose(dec_reg, ref_dec, atol=1e-6)
+    np.testing.assert_allclose(angle_reg * 180 / np.pi, rotation_angle, atol=1e-3)
+    np.testing.assert_allclose(dec_reg[0:3, 3:6], np.zeros((3, 3)), atol=1e-6)
+    np.testing.assert_allclose(dec_reg[3:6, 0:3], np.zeros((3, 3)), atol=1e-6)
 
 
 reference_stiffness = """4.9983692051719798e-02 -6.4216083302349259e-03 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 -6.0014130758270327e-02 

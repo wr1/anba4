@@ -4,6 +4,12 @@ from dolfin import *
 from anba4 import *
 
 
+def parse_matrix(ref_str):
+    lines = ref_str.strip().split('\n')
+    mat = np.array([list(map(float, line.split())) for line in lines if line.strip()])
+    return mat
+
+
 def compute_multimat_with_hole(singular):
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
@@ -57,6 +63,8 @@ def test_multimat_with_hole_regular_vs_singular():
     stiff_sing, mass_sing = compute_multimat_with_hole(True)
     np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-5)
     np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-5)
+    ref_stiff = parse_matrix(reference_stiffness)
+    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-5)
 
 
 reference_stiffness = """3.6562114259374999e+06 -1.5183600001400947e+02 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 -1.0100430033504009e+07 

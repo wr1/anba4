@@ -4,6 +4,12 @@ from dolfin import *
 from anba4 import *
 
 
+def parse_matrix(ref_str):
+    lines = ref_str.strip().split('\n')
+    mat = np.array([list(map(float, line.split())) for line in lines if line.strip()])
+    return mat
+
+
 def compute_rotation_multimat(singular):
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
@@ -173,6 +179,8 @@ def test_rotation_multimat_regular_vs_singular():
     stiff_sing, mass_sing = compute_rotation_multimat(True)
     np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-6)
     np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-6)
+    ref_stiff = parse_matrix(reference_stiffness_multimat)
+    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-6)
 
 
 reference_stiffness_multimat = """4.7732277895589388e+05 1.8729150027703770e+05 -1.0004014718593998e+05 -2.6559245932415263e+02 -1.1191407847951135e+02 -5.5637423163899818e+01 

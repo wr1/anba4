@@ -4,6 +4,12 @@ from dolfin import *
 from anba4 import *
 
 
+def parse_matrix(ref_str):
+    lines = ref_str.strip().split('\n')
+    mat = np.array([list(map(float, line.split())) for line in lines if line.strip()])
+    return mat
+
+
 def compute_isotropic(singular):
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
@@ -41,6 +47,10 @@ def test_isotropic_regular_vs_singular():
     stiff_sing, mass_sing = compute_isotropic(True)
     np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-6)
     np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-6)
+    ref_stiff = parse_matrix(reference_stiffness)
+    ref_mass = parse_matrix(reference_mass)
+    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-6)
+    np.testing.assert_allclose(mass_reg, ref_mass, atol=1e-6)
 
 
 reference_stiffness = """3.1106440126718432e-01 -5.7626764670407046e-07 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 1.8332325847382240e-16 

@@ -4,6 +4,12 @@ from dolfin import *
 from anba4 import *
 
 
+def parse_matrix(ref_str):
+    lines = ref_str.strip().split('\n')
+    mat = np.array([list(map(float, line.split())) for line in lines if line.strip()])
+    return mat
+
+
 def compute_rotation(singular):
     parameters["form_compiler"]["optimize"] = True
     parameters["form_compiler"]["quadrature_degree"] = 2
@@ -170,6 +176,8 @@ def test_rotation_regular_vs_singular():
     stiff_sing, mass_sing = compute_rotation(True)
     np.testing.assert_allclose(stiff_reg, stiff_sing, atol=1e-5)
     np.testing.assert_allclose(mass_reg, mass_sing, atol=1e-5)
+    ref_stiff = parse_matrix(reference_rotation)
+    np.testing.assert_allclose(stiff_reg, ref_stiff, atol=1e-5)
 
 
 reference_rotation = """5.9898449578112806e+05 -1.7724237108734714e-08 1.1500601625315664e-08 -4.1049059250476665e+02 6.4406313317207103e-11 -1.7332964943005700e-10 
