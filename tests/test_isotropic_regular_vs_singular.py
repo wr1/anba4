@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from dolfin import *
+import dolfin
 from anba4 import *
 
 
@@ -12,16 +12,16 @@ def parse_matrix(ref_str):
 
 @pytest.fixture(scope="module")
 def isotropic_data():
-    parameters["form_compiler"]["optimize"] = True
-    parameters["form_compiler"]["quadrature_degree"] = 2
+    dolfin.parameters["form_compiler"]["optimize"] = True
+    dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
     E = 1.0
     nu = 0.33
     matMechanicProp = [E, nu]
-    mesh = UnitSquareMesh(10, 10)
-    ALE.move(mesh, Constant([-0.5, -0.5]))
-    materials = MeshFunction("size_t", mesh, mesh.topology().dim())
-    fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
-    plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+    mesh = dolfin.UnitSquareMesh(10, 10)
+    dolfin.ALE.move(mesh, dolfin.Constant([-0.5, -0.5]))
+    materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+    fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+    plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
     materials.set_all(0)
     fiber_orientations.set_all(0.0)
     plane_orientations.set_all(90.0)

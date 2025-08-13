@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from dolfin import *
+import dolfin
 from anba4 import *
 
 
@@ -12,23 +12,23 @@ def parse_matrix(ref_str):
 
 @pytest.fixture(scope="module")
 def multimat_with_hole_data():
-    parameters["form_compiler"]["optimize"] = True
-    parameters["form_compiler"]["quadrature_degree"] = 2
+    dolfin.parameters["form_compiler"]["optimize"] = True
+    dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
     matMechanicProp1 = [80000, 0.3]
     matMechanicProp2 = [80000 * 0.5, 0.3]
     matMechanicProp3 = [80000 * 0.00001, 0.3]
     sectionWidth = 20
     sectionHeight = 20
-    mesh = RectangleMesh(
-        Point(0.0, 0.0), Point(sectionWidth, sectionHeight), 50, 50, "crossed"
+    mesh = dolfin.RectangleMesh(
+        dolfin.Point(0.0, 0.0), dolfin.Point(sectionWidth, sectionHeight), 50, 50, "crossed"
     )
-    ALE.move(mesh, Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
-    materials = MeshFunction("size_t", mesh, mesh.topology().dim())
-    fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
-    plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+    dolfin.ALE.move(mesh, dolfin.Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
+    materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+    fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+    plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
     tol = 1e-14
-    lower_portion = CompiledSubDomain("x[1] <= 0 + tol", tol=tol)
-    hole = CompiledSubDomain(
+    lower_portion = dolfin.CompiledSubDomain("x[1] <= 0 + tol", tol=tol)
+    hole = dolfin.CompiledSubDomain(
         "(x[1] >= -6 + tol && x[1] <= 6. + tol)&&(x[0] >= -2 + tol && x[0] <= 2. + tol)",
         tol=tol,
     )

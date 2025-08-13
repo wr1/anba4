@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from dolfin import *
+import dolfin
 from anba4 import *
 import mshr
 
@@ -13,15 +13,15 @@ def parse_matrix(ref_str):
 
 @pytest.fixture(scope="module")
 def principal_axes_data():
-    parameters["form_compiler"]["optimize"] = True
-    parameters["form_compiler"]["quadrature_degree"] = 2
+    dolfin.parameters["form_compiler"]["optimize"] = True
+    dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
     E = 1.0
     nu = 0.33
     matMechanicProp = [E, nu]
     thickness = 0.1
-    Square1 = mshr.Rectangle(Point(0.0, -1.0, 0.0), Point(1.0, 1.0, 0.0))
+    Square1 = mshr.Rectangle(dolfin.Point(0.0, -1.0, 0.0), dolfin.Point(1.0, 1.0, 0.0))
     Square2 = mshr.Rectangle(
-        Point(thickness, -1 + thickness, 0), Point(2.0, 1.0 - thickness, 0)
+        dolfin.Point(thickness, -1 + thickness, 0), dolfin.Point(2.0, 1.0 - thickness, 0)
     )
     C_shape = Square1 - Square2
     mesh = mshr.generate_mesh(C_shape, 64)
@@ -31,9 +31,9 @@ def principal_axes_data():
     rot_tensor = np.array([[cr, -sr], [sr, cr]])
     mesh.coordinates()[:] = (rot_tensor @ mesh.coordinates().T).T
     mesh.coordinates()[:] += np.array([3, 1])
-    materials = MeshFunction("size_t", mesh, mesh.topology().dim())
-    fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
-    plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+    materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+    fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+    plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
     materials.set_all(0)
     fiber_orientations.set_all(0.0)
     plane_orientations.set_all(90.0)
