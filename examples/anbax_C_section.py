@@ -54,7 +54,7 @@ fiber_orientations.set_all(0.0)
 plane_orientations.set_all(90.0)
 
 # Build material property library.
-mat1 = IsotropicMaterial(matMechanicProp, 1.0)
+mat1 = anba4.material.IsotropicMaterial(matMechanicProp, 1.0)
 
 matLibrary = []
 matLibrary.append(mat1)
@@ -70,12 +70,34 @@ stiff.view()
 mass = anba4.compute_inertia(anbax_data)
 mass.view()
 
-stress_result_file = dolfin.XDMFFile("Stress.xdmf")
+output_file = "anbax_C_section.xdmf"
+stress_result_file = dolfin.XDMFFile(output_file)
 stress_result_file.parameters["functions_share_mesh"] = True
 stress_result_file.parameters["rewrite_function_mesh"] = False
 stress_result_file.parameters["flush_output"] = True
 
-# anba.stress_field([1., 0., 0.,], [0., 0., 0.], "local", "paraview")
-# anba.strain_field([1., 0., 0.,], [0., 0., 0.], "local", "paraview")
-# stress_result_file.write(anba.STRESS, t = 0.)
-# stress_result_file.write(anba.STRAIN, t = 1.)
+stress = anba4.stress_field(
+    anbax_data,
+    [
+        1.0,
+        0.0,
+        0.0,
+    ],
+    [0.0, 0.0, 0.0],
+    "local",
+    "paraview",
+)
+strain = anba4.strain_field(
+    anbax_data,
+    [
+        1.0,
+        0.0,
+        0.0,
+    ],
+    [0.0, 0.0, 0.0],
+    "local",
+    "paraview",
+)
+stress_result_file.write(stress, t=0.0)
+stress_result_file.write(strain, t=1.0)
+print(f"Stress and strain fields written to {output_file}")

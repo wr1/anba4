@@ -21,13 +21,15 @@
 # ----------------------------------------------------------------------
 #
 
-import dolfin as df
+import dolfin
 import numpy as np
 from mshr import Polygon, generate_mesh
-from anba4 import *
 
-df.parameters["form_compiler"]["optimize"] = True
-df.parameters["form_compiler"]["quadrature_degree"] = 2
+# from anba4 import *
+import anba4
+
+dolfin.parameters["form_compiler"]["optimize"] = False
+dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
 # Basic material parameters. 9 is needed for orthotropic materials.
 # psi2pa = 6894.7572931783
@@ -108,197 +110,197 @@ h6 = h5 - 2.0 * t
 # tt = 0.03
 top_plies_0 = Polygon(
     [
-        df.Point(-0.5 * b1, 0.5 * h1),
-        df.Point(0.5 * b1, 0.5 * h1),
-        df.Point(0.5 * b0, 0.5 * h0),
-        df.Point(-0.5 * b0, 0.5 * h0),
+        dolfin.Point(-0.5 * b1, 0.5 * h1),
+        dolfin.Point(0.5 * b1, 0.5 * h1),
+        dolfin.Point(0.5 * b0, 0.5 * h0),
+        dolfin.Point(-0.5 * b0, 0.5 * h0),
     ]
 )
 top_plies_1 = Polygon(
     [
-        df.Point(-0.5 * b2, 0.5 * h2),
-        df.Point(0.5 * b2, 0.5 * h2),
-        df.Point(0.5 * b1, 0.5 * h1),
-        df.Point(-0.5 * b1, 0.5 * h1),
+        dolfin.Point(-0.5 * b2, 0.5 * h2),
+        dolfin.Point(0.5 * b2, 0.5 * h2),
+        dolfin.Point(0.5 * b1, 0.5 * h1),
+        dolfin.Point(-0.5 * b1, 0.5 * h1),
     ]
 )
 top_plies_2 = Polygon(
     [
-        df.Point(-0.5 * b3, 0.5 * h3),
-        df.Point(0.5 * b3, 0.5 * h3),
-        df.Point(0.5 * b2, 0.5 * h2),
-        df.Point(-0.5 * b2, 0.5 * h2),
+        dolfin.Point(-0.5 * b3, 0.5 * h3),
+        dolfin.Point(0.5 * b3, 0.5 * h3),
+        dolfin.Point(0.5 * b2, 0.5 * h2),
+        dolfin.Point(-0.5 * b2, 0.5 * h2),
     ]
 )
 top_plies_3 = Polygon(
     [
-        df.Point(-0.5 * b4, 0.5 * h4),
-        df.Point(0.5 * b4, 0.5 * h4),
-        df.Point(0.5 * b3, 0.5 * h3),
-        df.Point(-0.5 * b3, 0.5 * h3),
+        dolfin.Point(-0.5 * b4, 0.5 * h4),
+        dolfin.Point(0.5 * b4, 0.5 * h4),
+        dolfin.Point(0.5 * b3, 0.5 * h3),
+        dolfin.Point(-0.5 * b3, 0.5 * h3),
     ]
 )
 top_plies_4 = Polygon(
     [
-        df.Point(-0.5 * b5, 0.5 * h5),
-        df.Point(0.5 * b5, 0.5 * h5),
-        df.Point(0.5 * b4, 0.5 * h4),
-        df.Point(-0.5 * b4, 0.5 * h4),
+        dolfin.Point(-0.5 * b5, 0.5 * h5),
+        dolfin.Point(0.5 * b5, 0.5 * h5),
+        dolfin.Point(0.5 * b4, 0.5 * h4),
+        dolfin.Point(-0.5 * b4, 0.5 * h4),
     ]
 )
 top_plies_5 = Polygon(
     [
-        df.Point(-0.5 * b6, 0.5 * h6),
-        df.Point(0.5 * b6, 0.5 * h6),
-        df.Point(0.5 * b5, 0.5 * h5),
-        df.Point(-0.5 * b5, 0.5 * h5),
+        dolfin.Point(-0.5 * b6, 0.5 * h6),
+        dolfin.Point(0.5 * b6, 0.5 * h6),
+        dolfin.Point(0.5 * b5, 0.5 * h5),
+        dolfin.Point(-0.5 * b5, 0.5 * h5),
     ]
 )
 
 down_plies_0 = Polygon(
     [
-        df.Point(-0.5 * b0, -0.5 * h0),
-        df.Point(0.5 * b0, -0.5 * h0),
-        df.Point(0.5 * b1, -0.5 * h1),
-        df.Point(-0.5 * b1, -0.5 * h1),
+        dolfin.Point(-0.5 * b0, -0.5 * h0),
+        dolfin.Point(0.5 * b0, -0.5 * h0),
+        dolfin.Point(0.5 * b1, -0.5 * h1),
+        dolfin.Point(-0.5 * b1, -0.5 * h1),
     ]
 )
 down_plies_1 = Polygon(
     [
-        df.Point(-0.5 * b1, -0.5 * h1),
-        df.Point(0.5 * b1, -0.5 * h1),
-        df.Point(0.5 * b2, -0.5 * h2),
-        df.Point(-0.5 * b2, -0.5 * h2),
+        dolfin.Point(-0.5 * b1, -0.5 * h1),
+        dolfin.Point(0.5 * b1, -0.5 * h1),
+        dolfin.Point(0.5 * b2, -0.5 * h2),
+        dolfin.Point(-0.5 * b2, -0.5 * h2),
     ]
 )
 down_plies_2 = Polygon(
     [
-        df.Point(-0.5 * b2, -0.5 * h2),
-        df.Point(0.5 * b2, -0.5 * h2),
-        df.Point(0.5 * b3, -0.5 * h3),
-        df.Point(-0.5 * b3, -0.5 * h3),
+        dolfin.Point(-0.5 * b2, -0.5 * h2),
+        dolfin.Point(0.5 * b2, -0.5 * h2),
+        dolfin.Point(0.5 * b3, -0.5 * h3),
+        dolfin.Point(-0.5 * b3, -0.5 * h3),
     ]
 )
 down_plies_3 = Polygon(
     [
-        df.Point(-0.5 * b3, -0.5 * h3),
-        df.Point(0.5 * b3, -0.5 * h3),
-        df.Point(0.5 * b4, -0.5 * h4),
-        df.Point(-0.5 * b4, -0.5 * h4),
+        dolfin.Point(-0.5 * b3, -0.5 * h3),
+        dolfin.Point(0.5 * b3, -0.5 * h3),
+        dolfin.Point(0.5 * b4, -0.5 * h4),
+        dolfin.Point(-0.5 * b4, -0.5 * h4),
     ]
 )
 down_plies_4 = Polygon(
     [
-        df.Point(-0.5 * b4, -0.5 * h4),
-        df.Point(0.5 * b4, -0.5 * h4),
-        df.Point(0.5 * b5, -0.5 * h5),
-        df.Point(-0.5 * b5, -0.5 * h5),
+        dolfin.Point(-0.5 * b4, -0.5 * h4),
+        dolfin.Point(0.5 * b4, -0.5 * h4),
+        dolfin.Point(0.5 * b5, -0.5 * h5),
+        dolfin.Point(-0.5 * b5, -0.5 * h5),
     ]
 )
 down_plies_5 = Polygon(
     [
-        df.Point(-0.5 * b5, -0.5 * h5),
-        df.Point(0.5 * b5, -0.5 * h5),
-        df.Point(0.5 * b6, -0.5 * h6),
-        df.Point(-0.5 * b6, -0.5 * h6),
+        dolfin.Point(-0.5 * b5, -0.5 * h5),
+        dolfin.Point(0.5 * b5, -0.5 * h5),
+        dolfin.Point(0.5 * b6, -0.5 * h6),
+        dolfin.Point(-0.5 * b6, -0.5 * h6),
     ]
 )
 
 left_plies_0 = Polygon(
     [
-        df.Point(-0.5 * b0, -0.5 * h0),
-        df.Point(-0.5 * b1, -0.5 * h1),
-        df.Point(-0.5 * b1, 0.5 * h1),
-        df.Point(-0.5 * b0, 0.5 * h0),
+        dolfin.Point(-0.5 * b0, -0.5 * h0),
+        dolfin.Point(-0.5 * b1, -0.5 * h1),
+        dolfin.Point(-0.5 * b1, 0.5 * h1),
+        dolfin.Point(-0.5 * b0, 0.5 * h0),
     ]
 )
 left_plies_1 = Polygon(
     [
-        df.Point(-0.5 * b1, -0.5 * h1),
-        df.Point(-0.5 * b2, -0.5 * h2),
-        df.Point(-0.5 * b2, 0.5 * h2),
-        df.Point(-0.5 * b1, 0.5 * h1),
+        dolfin.Point(-0.5 * b1, -0.5 * h1),
+        dolfin.Point(-0.5 * b2, -0.5 * h2),
+        dolfin.Point(-0.5 * b2, 0.5 * h2),
+        dolfin.Point(-0.5 * b1, 0.5 * h1),
     ]
 )
 left_plies_2 = Polygon(
     [
-        df.Point(-0.5 * b2, -0.5 * h2),
-        df.Point(-0.5 * b3, -0.5 * h3),
-        df.Point(-0.5 * b3, 0.5 * h3),
-        df.Point(-0.5 * b2, 0.5 * h2),
+        dolfin.Point(-0.5 * b2, -0.5 * h2),
+        dolfin.Point(-0.5 * b3, -0.5 * h3),
+        dolfin.Point(-0.5 * b3, 0.5 * h3),
+        dolfin.Point(-0.5 * b2, 0.5 * h2),
     ]
 )
 left_plies_3 = Polygon(
     [
-        df.Point(-0.5 * b3, -0.5 * h3),
-        df.Point(-0.5 * b4, -0.5 * h4),
-        df.Point(-0.5 * b4, 0.5 * h4),
-        df.Point(-0.5 * b3, 0.5 * h3),
+        dolfin.Point(-0.5 * b3, -0.5 * h3),
+        dolfin.Point(-0.5 * b4, -0.5 * h4),
+        dolfin.Point(-0.5 * b4, 0.5 * h4),
+        dolfin.Point(-0.5 * b3, 0.5 * h3),
     ]
 )
 left_plies_4 = Polygon(
     [
-        df.Point(-0.5 * b4, -0.5 * h4),
-        df.Point(-0.5 * b5, -0.5 * h5),
-        df.Point(-0.5 * b5, 0.5 * h5),
-        df.Point(-0.5 * b4, 0.5 * h4),
+        dolfin.Point(-0.5 * b4, -0.5 * h4),
+        dolfin.Point(-0.5 * b5, -0.5 * h5),
+        dolfin.Point(-0.5 * b5, 0.5 * h5),
+        dolfin.Point(-0.5 * b4, 0.5 * h4),
     ]
 )
 left_plies_5 = Polygon(
     [
-        df.Point(-0.5 * b5, -0.5 * h5),
-        df.Point(-0.5 * b6, -0.5 * h6),
-        df.Point(-0.5 * b6, 0.5 * h6),
-        df.Point(-0.5 * b5, 0.5 * h5),
+        dolfin.Point(-0.5 * b5, -0.5 * h5),
+        dolfin.Point(-0.5 * b6, -0.5 * h6),
+        dolfin.Point(-0.5 * b6, 0.5 * h6),
+        dolfin.Point(-0.5 * b5, 0.5 * h5),
     ]
 )
 
 right_plies_0 = Polygon(
     [
-        df.Point(0.5 * b1, -0.5 * h1),
-        df.Point(0.5 * b0, -0.5 * h0),
-        df.Point(0.5 * b0, 0.5 * h0),
-        df.Point(0.5 * b1, 0.5 * h1),
+        dolfin.Point(0.5 * b1, -0.5 * h1),
+        dolfin.Point(0.5 * b0, -0.5 * h0),
+        dolfin.Point(0.5 * b0, 0.5 * h0),
+        dolfin.Point(0.5 * b1, 0.5 * h1),
     ]
 )
 right_plies_1 = Polygon(
     [
-        df.Point(0.5 * b2, -0.5 * h2),
-        df.Point(0.5 * b1, -0.5 * h1),
-        df.Point(0.5 * b1, 0.5 * h1),
-        df.Point(0.5 * b2, 0.5 * h2),
+        dolfin.Point(0.5 * b2, -0.5 * h2),
+        dolfin.Point(0.5 * b1, -0.5 * h1),
+        dolfin.Point(0.5 * b1, 0.5 * h1),
+        dolfin.Point(0.5 * b2, 0.5 * h2),
     ]
 )
 right_plies_2 = Polygon(
     [
-        df.Point(0.5 * b3, -0.5 * h3),
-        df.Point(0.5 * b2, -0.5 * h2),
-        df.Point(0.5 * b2, 0.5 * h2),
-        df.Point(0.5 * b3, 0.5 * h3),
+        dolfin.Point(0.5 * b3, -0.5 * h3),
+        dolfin.Point(0.5 * b2, -0.5 * h2),
+        dolfin.Point(0.5 * b2, 0.5 * h2),
+        dolfin.Point(0.5 * b3, 0.5 * h3),
     ]
 )
 right_plies_3 = Polygon(
     [
-        df.Point(0.5 * b4, -0.5 * h4),
-        df.Point(0.5 * b3, -0.5 * h3),
-        df.Point(0.5 * b3, 0.5 * h3),
-        df.Point(0.5 * b4, 0.5 * h4),
+        dolfin.Point(0.5 * b4, -0.5 * h4),
+        dolfin.Point(0.5 * b3, -0.5 * h3),
+        dolfin.Point(0.5 * b3, 0.5 * h3),
+        dolfin.Point(0.5 * b4, 0.5 * h4),
     ]
 )
 right_plies_4 = Polygon(
     [
-        df.Point(0.5 * b5, -0.5 * h5),
-        df.Point(0.5 * b4, -0.5 * h4),
-        df.Point(0.5 * b4, 0.5 * h4),
-        df.Point(0.5 * b5, 0.5 * h4),
+        dolfin.Point(0.5 * b5, -0.5 * h5),
+        dolfin.Point(0.5 * b4, -0.5 * h4),
+        dolfin.Point(0.5 * b4, 0.5 * h4),
+        dolfin.Point(0.5 * b5, 0.5 * h4),
     ]
 )
 right_plies_5 = Polygon(
     [
-        df.Point(0.5 * b6, -0.5 * h6),
-        df.Point(0.5 * b5, -0.5 * h5),
-        df.Point(0.5 * b5, 0.5 * h5),
-        df.Point(0.5 * b6, 0.5 * h6),
+        dolfin.Point(0.5 * b6, -0.5 * h6),
+        dolfin.Point(0.5 * b5, -0.5 * h5),
+        dolfin.Point(0.5 * b5, 0.5 * h5),
+        dolfin.Point(0.5 * b6, 0.5 * h6),
     ]
 )
 
@@ -359,19 +361,19 @@ domain_0.set_subdomain(23, right_plies_4)
 domain_0.set_subdomain(24, right_plies_5)
 
 mesh = generate_mesh(domain_0, 20000)
-mf = df.MeshFunction("size_t", mesh, 2, mesh.domains())
+mf = dolfin.MeshFunction("size_t", mesh, 2, mesh.domains())
 
-materials = df.MeshFunction("size_t", mesh, 2, mesh.domains())
+materials = dolfin.MeshFunction("size_t", mesh, 2, mesh.domains())
 # isPiezoActive = MeshFunction("bool", mesh, 2, mesh.domains())
 # isMagneticActive = MeshFunction("bool", mesh, 2, mesh.domains())
-fiber_orientations = df.MeshFunction("double", mesh, 2, mesh.domains())
-plane_orientations = df.MeshFunction("double", mesh, 2, mesh.domains())
+fiber_orientations = dolfin.MeshFunction("double", mesh, 2, mesh.domains())
+plane_orientations = dolfin.MeshFunction("double", mesh, 2, mesh.domains())
 
 materials.set_all(0)
 fiber_orientations.set_all(15.0)
 plane_orientations.set_all(0.0)
 
-for ele in df.cells(mesh):
+for ele in dolfin.cells(mesh):
     i = ele.index()
     flag = mf[i]
     if flag in range(1, 7):
@@ -482,7 +484,7 @@ subdomain_1 = CompiledSubDomain(["x[1] >= -6.0*thickness + tol && x[1] <= -5.0*t
 # ALE.move(mesh, rotate)
 
 # Build material property library.
-mat1 = OrthotropicMaterial(matMechanicProp, 7800)
+mat1 = anba4.material.OrthotropicMaterial(matMechanicProp, 7800)
 
 # matMechanicProp1 = matMechanicProp
 # matMechanicProp1[0] = matMechanicProp1[0] / 100.
@@ -494,7 +496,7 @@ matLibrary.append(mat1)
 # matLibrary.append(mat2)
 
 
-anbax_data = initialize_anba_model(
+anbax_data = anba4.initialize_anba_model(
     mesh,
     2,
     matLibrary,
@@ -504,15 +506,15 @@ anbax_data = initialize_anba_model(
     singular=True,
     scaling_constraint=1.0e0,
 )
-initialize_fe_functions(anbax_data)
-initialize_chains(anbax_data)
-stiff = compute_stiffness(anbax_data)
+anba4.initialize_fe_functions(anbax_data)
+anba4.initialize_chains(anbax_data)
+stiff = anba4.compute_stiffness(anbax_data)
 stiff.view()
 
-mass = compute_inertia(anbax_data)
+mass = anba4.compute_inertia(anbax_data)
 mass.view()
 
-stress_result_file = df.XDMFFile("Stress.xdmf")
+stress_result_file = dolfin.XDMFFile("Stress.xdmf")
 stress_result_file.parameters["functions_share_mesh"] = True
 stress_result_file.parameters["rewrite_function_mesh"] = False
 stress_result_file.parameters["flush_output"] = True

@@ -60,7 +60,7 @@ def PrincipalAxesRotationAngle(decoupled_stiff_matrix):
 
 def pos3d(POS):
     "Return node coordinates Vector."
-    return as_vector([POS[0], POS[1], 0.0])
+    return dolfin.as_vector([POS[0], POS[1], 0.0])
 
 
 def grad3d(u, up):
@@ -77,7 +77,7 @@ def grad3d(u, up):
 
 def epsilon(u, up):
     "Return symmetric 3D infinitesimal strain tensor."
-    g3 = dolfin.grad3d(u, up)
+    g3 = grad3d(u, up)
     return 0.5 * (g3.T + g3)
 
 
