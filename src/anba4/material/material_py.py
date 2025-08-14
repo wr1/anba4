@@ -116,6 +116,11 @@ class IsotropicMaterial(Material):
             "rho": self.rho,
         }
 
+    @classmethod
+    def from_dict(cls, d: dict):
+        mat_mechanic_prop = [d["E"], d["nu"]]
+        return cls(mat_mechanic_prop, d["rho"])
+
 
 class OrthotropicMaterial(Material):
     def __init__(self, mat_mechanic_prop, rho=0.0):
@@ -176,6 +181,11 @@ class OrthotropicMaterial(Material):
             "props": self.props.tolist(),
             "rho": self.rho,
         }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        mat_mechanic_prop = np.array(d["props"])
+        return cls(mat_mechanic_prop, d["rho"])
 
 
 class ElasticModulus(UserExpression):
