@@ -9,3 +9,4 @@ from .voight_notation import *
 from .material import *
 from .utils import *
 from .data.data_model import AnbaData
+from .io.export import export_model_vtu, export_model_json
