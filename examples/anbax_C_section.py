@@ -24,7 +24,7 @@
 import dolfin
 import anba4
 import mshr
-from anba4.io.export import export_model_vtu
+from anba4.io.export import export_model_vtu, export_model_json
 
 
 dolfin.parameters["form_compiler"]["optimize"] = True
@@ -66,9 +66,17 @@ export_model_vtu(
     mesh, materials, fiber_orientations, plane_orientations, mesh_name="mesh.vtu"
 )
 
-anbax_data = anba4.initialize_anba_model(
-    mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
+input_data = anba4.InputData(
+    mesh=mesh,
+    degree=2,
+    matLibrary=matLibrary,
+    materials=materials,
+    plane_orientations=plane_orientations,
+    fiber_orientations=fiber_orientations,
 )
+export_model_json(input_data, "mesh.json")
+
+anbax_data = anba4.initialize_anba_model(input_data)
 anba4.initialize_fe_functions(anbax_data)
 anba4.initialize_chains(anbax_data)
 stiff = anba4.compute_stiffness(anbax_data)
