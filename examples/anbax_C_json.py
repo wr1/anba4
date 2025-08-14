@@ -29,6 +29,7 @@ from anba4.io.export import import_model_json
 dolfin.parameters["form_compiler"]["optimize"] = True
 dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
+# Load from the sample mesh.json or a generated one
 serializable_input = import_model_json("mesh.json")
 
 anbax_data = anba4.initialize_anba_model(serializable_input)
