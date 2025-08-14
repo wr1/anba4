@@ -55,9 +55,7 @@ def serialize_matrix(matrix: PETSc.Mat) -> List[List[float]]:
     rows, cols = matrix.getSize()
     mat_list = []
     for i in range(rows):
-        row = []
-        for j in range(cols):
-            row.append(matrix[i, j])
+        row = [float(matrix[i, j]) for j in range(cols)]
         mat_list.append(row)
     return mat_list
 
@@ -66,4 +64,5 @@ def serialize_field(field: dolfin.Function) -> List[List[float]]:
     """Serialize Dolfin vector field to list of lists (per component)."""
     array = field.vector().get_local()
     dim = field.function_space().ufl_element().value_shape()[0]
-    return array.reshape(-1, dim).tolist()
+    reshaped = array.reshape(-1, dim)
+    return [[float(val) for val in row] for row in reshaped]
