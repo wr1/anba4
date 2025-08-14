@@ -60,6 +60,11 @@ def serialize_matrix(matrix: PETSc.Mat) -> List[List[float]]:
     return mat_list
 
 
+def serialize_numpy_matrix(matrix: np.ndarray) -> List[List[float]]:
+    """Serialize numpy matrix to list of lists."""
+    return [[float(val) for val in row] for row in matrix]
+
+
 def serialize_field(field: dolfin.Function) -> List[List[float]]:
     """Serialize Dolfin vector field to list of lists (per component)."""
     array = field.vector().get_local()
