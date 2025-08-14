@@ -15,4 +15,5 @@ from .io.export import (
     import_model_json,
     serialize_matrix,
     serialize_field,
+    serialize_numpy_matrix,
 )
