@@ -1,23 +1,19 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "anba4"
-version = "0.0.1"
-description = "ANBA4 - ANisotropic Beam Analysis"
-authors = [{name = "Marco Morandini"}]
+version = "0.1.0"
+description = "Anisotropic Beam Analysis"
+authors = [{ name = "Your Name", email = "you@example.com" }]
+requires-python = "~=3.9"
 dependencies = [
-  "numpy",
-  "fenics-dolfin",
-  "petsc4py",
-  "pydantic"
+    "dolfin",
+    "mshr",
+    "pyvista",
+    "petsc4py",
+    "numpy",
+    "pydantic",
+    "click",
 ]
 
 [project.scripts]
-anba = "anba4.cli:main"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-namespaces = false
+anba4 = "anba4.cli.main:run"
 
