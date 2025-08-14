@@ -10,8 +10,18 @@ from .. import (
     compute_inertia,
     stress_field,
     strain_field,
+    ComputeShearCenter,
+    ComputeTensionCenter,
+    ComputeMassCenter,
+    DecoupleStiffness,
+    PrincipalAxesRotationAngle,
 )
-from ..io.export import import_model_json, serialize_matrix, serialize_field
+from ..io.export import (
+    import_model_json,
+    serialize_matrix,
+    serialize_field,
+    serialize_numpy_matrix,
+)
 
 
 @click.command()
@@ -67,11 +77,23 @@ def run(
     stress = stress_field(anbax_data, force, moment, reference, voigt)
     strain = strain_field(anbax_data, force, moment, reference, voigt)
 
+    # Compute centers and angles
+    shear_center = ComputeShearCenter(stiff)
+    tension_center = ComputeTensionCenter(stiff)
+    mass_center = ComputeMassCenter(mass)
+    decoupled_stiff = DecoupleStiffness(stiff)
+    principal_angle = PrincipalAxesRotationAngle(decoupled_stiff)
+
     output_data = {
         "stiffness": serialize_matrix(stiff),
         "mass": serialize_matrix(mass),
         "stress": serialize_field(stress),
         "strain": serialize_field(strain),
+        "shear_center": shear_center,
+        "tension_center": tension_center,
+        "mass_center": mass_center,
+        "decoupled_stiffness": serialize_numpy_matrix(decoupled_stiff),
+        "principal_angle": principal_angle,
     }
 
     with open(output, "w") as f:
