@@ -8,5 +8,5 @@ from .solvers.strain import strain_field
 from .voight_notation import *
 from .material import *
 from .utils import *
-from .data.data_model import AnbaData, SerializableInputData
-from .io.export import export_model_vtu, export_model_json
+from .data.data_model import AnbaData, SerializableInputData, InputData
+from .io.export import export_model_vtu, export_model_json, import_model_json
