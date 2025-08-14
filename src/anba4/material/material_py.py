@@ -67,12 +67,17 @@ class Material:
     def compute_rotated_stress_elastic_modulus(self, alpha, beta):
         raise NotImplementedError
 
+    def to_dict(self):
+        raise NotImplementedError
+
 
 class IsotropicMaterial(Material):
     def __init__(self, mat_mechanic_prop, rho=0.0):
         super().__init__(rho)
-        E = mat_mechanic_prop[0]
-        nu = mat_mechanic_prop[1]
+        self.E = mat_mechanic_prop[0]
+        self.nu = mat_mechanic_prop[1]
+        E = self.E
+        nu = self.nu
         G = E / (2 * (1 + nu))
 
         delta = E / (1.0 + nu) / (1 - 2.0 * nu)
@@ -103,10 +108,19 @@ class IsotropicMaterial(Material):
         self.mat_rotated_stress_modulus = np.dot(self.mat_modulus, TM.T)
         return self.mat_rotated_stress_modulus
 
+    def to_dict(self):
+        return {
+            "type": "isotropic",
+            "E": self.E,
+            "nu": self.nu,
+            "rho": self.rho,
+        }
+
 
 class OrthotropicMaterial(Material):
     def __init__(self, mat_mechanic_prop, rho=0.0):
         super().__init__(rho)
+        self.props = np.copy(mat_mechanic_prop)
         e_xx = mat_mechanic_prop[0, 0]
         e_yy = mat_mechanic_prop[0, 1]
         e_zz = mat_mechanic_prop[0, 2]
@@ -155,6 +169,13 @@ class OrthotropicMaterial(Material):
         TM = self.transformation_matrix(alpha, beta)
         self.mat_rotated_stress_modulus = np.dot(self.mat_local_modulus, TM.T)
         return self.mat_rotated_stress_modulus
+
+    def to_dict(self):
+        return {
+            "type": "orthotropic",
+            "props": self.props.tolist(),
+            "rho": self.rho,
+        }
 
 
 class ElasticModulus(UserExpression):
