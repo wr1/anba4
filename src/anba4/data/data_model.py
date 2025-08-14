@@ -20,6 +20,18 @@ class MaterialData(BaseModel):
     density: Optional[Any] = None
 
 
+class SerializableInputData(BaseModel):
+    points: List[List[float]]
+    cells: List[List[int]]
+    degree: int
+    mat_library: List[dict]
+    material_ids: List[int]
+    fiber_orientations: List[float]
+    plane_orientations: List[float]
+    scaling_constraint: float = 1.0
+    singular: bool = False
+
+
 class InputData(BaseModel):
     mesh: Any
     degree: int
@@ -29,6 +41,23 @@ class InputData(BaseModel):
     plane_orientations: Any
     scaling_constraint: float = 1.0
     singular: bool = False
+
+    def to_dict(self) -> dict:
+        """Convert InputData to a serializable dictionary."""
+        points = [list(p) + [0.0] for p in self.mesh.coordinates().tolist()]
+        cells = self.mesh.cells().tolist()
+        mat_lib = [m.to_dict() for m in self.matLibrary]
+        return {
+            "points": points,
+            "cells": cells,
+            "degree": self.degree,
+            "mat_library": mat_lib,
+            "material_ids": self.materials.array().tolist(),
+            "fiber_orientations": self.fiber_orientations.array().tolist(),
+            "plane_orientations": self.plane_orientations.array().tolist(),
+            "scaling_constraint": self.scaling_constraint,
+            "singular": self.singular,
+        }
 
 
 class FEFunctions(BaseModel):
