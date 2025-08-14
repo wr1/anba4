@@ -22,6 +22,8 @@
 #
 
 from dolfin import *
+import numpy as np
+from typing import Union, List
 from .. import material
 from .data_model import (
     AnbaData,
@@ -30,47 +32,83 @@ from .data_model import (
     Chains,
     OutputData,
     MaterialData,
+    SerializableInputData,
 )
 
 
 def initialize_anba_model(
-    mesh,
-    degree,
-    matLibrary,
-    materials,
-    plane_orientations,
-    fiber_orientations,
-    scaling_constraint=1.0,
-    singular=False,
-):
-    input_data = InputData(
-        mesh=mesh,
-        degree=degree,
-        matLibrary=matLibrary,
-        materials=materials,
-        fiber_orientations=fiber_orientations,
-        plane_orientations=plane_orientations,
-        scaling_constraint=scaling_constraint,
-        singular=singular,
-    )
-    fe_functions = FEFunctions(POS=MeshCoordinates(mesh))
+    input_data: Union[InputData, SerializableInputData],
+) -> AnbaData:
+    if isinstance(input_data, SerializableInputData):
+        # Construct Dolfin mesh from points and cells
+        coordinates = np.array([p[:2] for p in input_data.points])  # Assume 2D, z=0
+        cells = np.array(input_data.cells, dtype=np.uintp)
+        mesh = Mesh(coordinates, cells)
+
+        # Reconstruct matLibrary from dicts
+        matLibrary: List[material.Material] = []
+        for md in input_data.mat_library:
+            if md["type"] == "isotropic":
+                matLibrary.append(material.IsotropicMaterial.from_dict(md))
+            elif md["type"] == "orthotropic":
+                matLibrary.append(material.OrthotropicMaterial.from_dict(md))
+            else:
+                raise ValueError(f"Unknown material type: {md['type']}")
+
+        # Create MeshFunctions
+        materials = MeshFunction("size_t", mesh, mesh.topology().dim())
+        materials.array()[:] = np.array(input_data.material_ids, dtype=np.uintp)
+
+        fiber_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+        fiber_orientations.array()[:] = np.array(input_data.fiber_orientations)
+
+        plane_orientations = MeshFunction("double", mesh, mesh.topology().dim())
+        plane_orientations.array()[:] = np.array(input_data.plane_orientations)
+
+        # Create InputData with Dolfin objects
+        dolfin_input = InputData(
+            mesh=mesh,
+            degree=input_data.degree,
+            matLibrary=matLibrary,
+            materials=materials,
+            fiber_orientations=fiber_orientations,
+            plane_orientations=plane_orientations,
+            scaling_constraint=input_data.scaling_constraint,
+            singular=input_data.singular,
+        )
+    else:
+        dolfin_input = input_data
+
+    fe_functions = FEFunctions(POS=MeshCoordinates(dolfin_input.mesh))
     data = AnbaData(
-        input_data=input_data,
+        input_data=dolfin_input,
         fe_functions=fe_functions,
         chains=Chains(),
         output_data=OutputData(),
         material_data=MaterialData(),
     )
     data.material_data.modulus = material.ElasticModulus(
-        matLibrary, materials, plane_orientations, fiber_orientations, degree=0
+        dolfin_input.matLibrary,
+        dolfin_input.materials,
+        dolfin_input.plane_orientations,
+        dolfin_input.fiber_orientations,
+        degree=0,
     )
     data.material_data.RotatedStress_modulus = material.RotatedStressElasticModulus(
-        matLibrary, materials, plane_orientations, fiber_orientations, degree=0
+        dolfin_input.matLibrary,
+        dolfin_input.materials,
+        dolfin_input.plane_orientations,
+        dolfin_input.fiber_orientations,
+        degree=0,
     )
     data.material_data.MaterialRotation_matrix = material.TransformationMatrix(
-        matLibrary, materials, plane_orientations, fiber_orientations, degree=0
+        dolfin_input.matLibrary,
+        dolfin_input.materials,
+        dolfin_input.plane_orientations,
+        dolfin_input.fiber_orientations,
+        degree=0,
     )
     data.material_data.density = material.MaterialDensity(
-        matLibrary, materials, degree=0
+        dolfin_input.matLibrary, dolfin_input.materials, degree=0
     )
     return data
