@@ -3,7 +3,7 @@ import numpy as np
 import pyvista as pv
 import dolfin
 
-from ..material.material_py import Material
+from ..data.data_model import InputData
 
 
 def export_model_vtu(
@@ -32,33 +32,10 @@ def export_model_vtu(
 
 
 def export_model_json(
-    mesh: dolfin.Mesh,
-    mat_library: list[Material],
-    materials: dolfin.MeshFunction,
-    fiber_orientations: dolfin.MeshFunction,
-    plane_orientations: dolfin.MeshFunction,
-    degree: int,
-    scaling_constraint: float = 1.0,
-    singular: bool = False,
+    input_data: InputData,
     filename: str = "model.json",
 ):
-    """Export model input data to JSON format, including full material properties."""
-    points = [list(p) + [0.0] for p in mesh.coordinates().tolist()]
-    cells = mesh.cells().tolist()
-    mat_ids = materials.array().tolist()
-    fiber_or = fiber_orientations.array().tolist()
-    plane_or = plane_orientations.array().tolist()
-    mat_lib = [m.to_dict() for m in mat_library]
-    data = {
-        "points": points,
-        "cells": cells,
-        "material_ids": mat_ids,
-        "fiber_orientations": fiber_or,
-        "plane_orientations": plane_or,
-        "mat_library": mat_lib,
-        "degree": degree,
-        "scaling_constraint": scaling_constraint,
-        "singular": singular,
-    }
+    """Export model input data to JSON format using InputData's to_dict."""
+    data = input_data.to_dict()
     with open(filename, "w") as f:
         json.dump(data, f, indent=4)
