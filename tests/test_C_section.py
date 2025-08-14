@@ -6,7 +6,7 @@ import mshr
 
 
 def parse_matrix(ref_str):
-    lines = ref_str.strip().split('\n')
+    lines = ref_str.strip().split("\n")
     mat = np.array([list(map(float, line.split())) for line in lines if line.strip()])
     return mat
 
@@ -21,7 +21,8 @@ def c_section_data():
     thickness = 0.1
     Square1 = mshr.Rectangle(dolfin.Point(0.0, -1.0, 0.0), dolfin.Point(1.0, 1.0, 0.0))
     Square2 = mshr.Rectangle(
-        dolfin.Point(thickness, -1 + thickness, 0), dolfin.Point(2.0, 1.0 - thickness, 0)
+        dolfin.Point(thickness, -1 + thickness, 0),
+        dolfin.Point(2.0, 1.0 - thickness, 0),
     )
     C_shape = Square1 - Square2
     mesh = mshr.generate_mesh(C_shape, 64)
@@ -36,7 +37,13 @@ def c_section_data():
 
     # Regular
     anbax_data_reg = initialize_anba_model(
-        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=False
+        mesh,
+        2,
+        matLibrary,
+        materials,
+        plane_orientations,
+        fiber_orientations,
+        singular=False,
     )
     initialize_fe_functions(anbax_data_reg)
     initialize_chains(anbax_data_reg)
@@ -49,7 +56,13 @@ def c_section_data():
 
     # Singular
     anbax_data_sing = initialize_anba_model(
-        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=True
+        mesh,
+        2,
+        matLibrary,
+        materials,
+        plane_orientations,
+        fiber_orientations,
+        singular=True,
     )
     initialize_fe_functions(anbax_data_sing)
     initialize_chains(anbax_data_sing)
@@ -61,51 +74,67 @@ def c_section_data():
     decoupled_mass_sing = utils.DecoupleStiffness(mass_mat_sing)
 
     return {
-        'stiff_reg': stiff_mat_reg,
-        'stiff_sing': stiff_mat_sing,
-        'mass_reg': mass_mat_reg,
-        'mass_sing': mass_mat_sing,
-        'dec_stiff_reg': decoupled_stiff_reg,
-        'dec_stiff_sing': decoupled_stiff_sing,
-        'dec_mass_reg': decoupled_mass_reg,
-        'dec_mass_sing': decoupled_mass_sing
+        "stiff_reg": stiff_mat_reg,
+        "stiff_sing": stiff_mat_sing,
+        "mass_reg": mass_mat_reg,
+        "mass_sing": mass_mat_sing,
+        "dec_stiff_reg": decoupled_stiff_reg,
+        "dec_stiff_sing": decoupled_stiff_sing,
+        "dec_mass_reg": decoupled_mass_reg,
+        "dec_mass_sing": decoupled_mass_sing,
     }
 
 
 def test_C_section_stiffness_regular_vs_singular(c_section_data):
-    np.testing.assert_allclose(c_section_data['stiff_reg'], c_section_data['stiff_sing'], atol=1e-6)
+    np.testing.assert_allclose(
+        c_section_data["stiff_reg"], c_section_data["stiff_sing"], atol=1e-6
+    )
 
 
 def test_C_section_mass_regular_vs_singular(c_section_data):
-    np.testing.assert_allclose(c_section_data['mass_reg'], c_section_data['mass_sing'], atol=1e-6)
+    np.testing.assert_allclose(
+        c_section_data["mass_reg"], c_section_data["mass_sing"], atol=1e-6
+    )
 
 
 def test_C_section_dec_stiff_regular_vs_singular(c_section_data):
-    np.testing.assert_allclose(c_section_data['dec_stiff_reg'], c_section_data['dec_stiff_sing'], atol=1e-6)
+    np.testing.assert_allclose(
+        c_section_data["dec_stiff_reg"], c_section_data["dec_stiff_sing"], atol=1e-6
+    )
 
 
 def test_C_section_dec_mass_regular_vs_singular(c_section_data):
-    np.testing.assert_allclose(c_section_data['dec_mass_reg'], c_section_data['dec_mass_sing'], atol=1e-6)
+    np.testing.assert_allclose(
+        c_section_data["dec_mass_reg"], c_section_data["dec_mass_sing"], atol=1e-6
+    )
 
 
 def test_C_section_stiffness_reference(c_section_data):
     ref_stiff = parse_matrix(reference_stiffness)
-    np.testing.assert_allclose(c_section_data['stiff_reg'], ref_stiff, atol=1e-6)
+    np.testing.assert_allclose(c_section_data["stiff_reg"], ref_stiff, atol=1e-6)
 
 
 def test_C_section_mass_reference(c_section_data):
     ref_mass = parse_matrix(reference_mass)
-    np.testing.assert_allclose(c_section_data['mass_reg'], ref_mass, atol=1e-6)
+    np.testing.assert_allclose(c_section_data["mass_reg"], ref_mass, atol=1e-6)
 
 
 def test_C_section_dec_stiff_zeros(c_section_data):
-    np.testing.assert_allclose(c_section_data['dec_stiff_reg'][0:3, 3:6], np.zeros((3, 3)), atol=1e-6)
-    np.testing.assert_allclose(c_section_data['dec_stiff_reg'][3:6, 0:3], np.zeros((3, 3)), atol=1e-6)
+    np.testing.assert_allclose(
+        c_section_data["dec_stiff_reg"][0:3, 3:6], np.zeros((3, 3)), atol=1e-6
+    )
+    np.testing.assert_allclose(
+        c_section_data["dec_stiff_reg"][3:6, 0:3], np.zeros((3, 3)), atol=1e-6
+    )
 
 
 def test_C_section_dec_mass_zeros(c_section_data):
-    np.testing.assert_allclose(c_section_data['dec_mass_reg'][0:3, 3:6], np.zeros((3, 3)), atol=1e-6)
-    np.testing.assert_allclose(c_section_data['dec_mass_reg'][3:6, 0:3], np.zeros((3, 3)), atol=1e-6)
+    np.testing.assert_allclose(
+        c_section_data["dec_mass_reg"][0:3, 3:6], np.zeros((3, 3)), atol=1e-6
+    )
+    np.testing.assert_allclose(
+        c_section_data["dec_mass_reg"][3:6, 0:3], np.zeros((3, 3)), atol=1e-6
+    )
 
 
 reference_stiffness = """4.6273006070753991e-02 -5.4883197410758094e-06 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 1.0312967608794575e-06 

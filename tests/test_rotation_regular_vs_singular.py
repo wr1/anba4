@@ -5,7 +5,7 @@ from anba4 import *
 
 
 def parse_matrix(ref_str):
-    lines = ref_str.strip().split('\n')
+    lines = ref_str.strip().split("\n")
     mat = np.array([list(map(float, line.split())) for line in lines if line.strip()])
     return mat
 
@@ -37,7 +37,11 @@ def rotation_data():
     sectionHeight = 1.9215e-3
     nPly = 16
     mesh = dolfin.RectangleMesh(
-        dolfin.Point(0.0, 0.0), dolfin.Point(sectionWidth, sectionHeight), 30, 32, "crossed"
+        dolfin.Point(0.0, 0.0),
+        dolfin.Point(sectionWidth, sectionHeight),
+        30,
+        32,
+        "crossed",
     )
     dolfin.ALE.move(mesh, dolfin.Constant([-sectionWidth / 2.0, -sectionHeight / 2.0]))
     materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
@@ -158,7 +162,14 @@ def rotation_data():
 
     # Regular
     anbax_data_reg = initialize_anba_model(
-        mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, singular=False, scaling_constraint=1.0e9
+        mesh,
+        1,
+        matLibrary,
+        materials,
+        plane_orientations,
+        fiber_orientations,
+        singular=False,
+        scaling_constraint=1.0e9,
     )
     initialize_fe_functions(anbax_data_reg)
     initialize_chains(anbax_data_reg)
@@ -169,7 +180,14 @@ def rotation_data():
 
     # Singular
     anbax_data_sing = initialize_anba_model(
-        mesh, 1, matLibrary, materials, plane_orientations, fiber_orientations, singular=True, scaling_constraint=1.0e9
+        mesh,
+        1,
+        matLibrary,
+        materials,
+        plane_orientations,
+        fiber_orientations,
+        singular=True,
+        scaling_constraint=1.0e9,
     )
     initialize_fe_functions(anbax_data_sing)
     initialize_chains(anbax_data_sing)
@@ -179,24 +197,28 @@ def rotation_data():
     mass_mat_sing = mass_sing.getValues(range(6), range(6))
 
     return {
-        'stiff_reg': stiff_mat_reg,
-        'stiff_sing': stiff_mat_sing,
-        'mass_reg': mass_mat_reg,
-        'mass_sing': mass_mat_sing
+        "stiff_reg": stiff_mat_reg,
+        "stiff_sing": stiff_mat_sing,
+        "mass_reg": mass_mat_reg,
+        "mass_sing": mass_mat_sing,
     }
 
 
 def test_rotation_stiffness_regular_vs_singular(rotation_data):
-    np.testing.assert_allclose(rotation_data['stiff_reg'], rotation_data['stiff_sing'], atol=1e-5)
+    np.testing.assert_allclose(
+        rotation_data["stiff_reg"], rotation_data["stiff_sing"], atol=1e-5
+    )
 
 
 def test_rotation_mass_regular_vs_singular(rotation_data):
-    np.testing.assert_allclose(rotation_data['mass_reg'], rotation_data['mass_sing'], atol=1e-5)
+    np.testing.assert_allclose(
+        rotation_data["mass_reg"], rotation_data["mass_sing"], atol=1e-5
+    )
 
 
 def test_rotation_stiffness_reference(rotation_data):
     ref_stiff = parse_matrix(reference_rotation)
-    np.testing.assert_allclose(rotation_data['stiff_reg'], ref_stiff, atol=1e-5)
+    np.testing.assert_allclose(rotation_data["stiff_reg"], ref_stiff, atol=1e-5)
 
 
 reference_rotation = """5.9898449578112806e+05 -1.7724237108734714e-08 1.1500601625315664e-08 -4.1049059250476665e+02 6.4406313317207103e-11 -1.7332964943005700e-10 

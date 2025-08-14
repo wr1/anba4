@@ -23,7 +23,6 @@
 
 import anba4
 import dolfin
-import anba4
 import mshr
 
 dolfin.parameters["form_compiler"]["optimize"] = True

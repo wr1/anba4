@@ -5,7 +5,7 @@ from anba4 import *
 
 
 def parse_matrix(ref_str):
-    lines = ref_str.strip().split('\n')
+    lines = ref_str.strip().split("\n")
     mat = np.array([list(map(float, line.split())) for line in lines if line.strip()])
     return mat
 
@@ -30,7 +30,13 @@ def isotropic_data():
 
     # Regular
     anbax_data_reg = initialize_anba_model(
-        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=False
+        mesh,
+        2,
+        matLibrary,
+        materials,
+        plane_orientations,
+        fiber_orientations,
+        singular=False,
     )
     initialize_fe_functions(anbax_data_reg)
     initialize_chains(anbax_data_reg)
@@ -41,7 +47,13 @@ def isotropic_data():
 
     # Singular
     anbax_data_sing = initialize_anba_model(
-        mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations, singular=True
+        mesh,
+        2,
+        matLibrary,
+        materials,
+        plane_orientations,
+        fiber_orientations,
+        singular=True,
     )
     initialize_fe_functions(anbax_data_sing)
     initialize_chains(anbax_data_sing)
@@ -51,29 +63,33 @@ def isotropic_data():
     mass_mat_sing = mass_sing.getValues(range(6), range(6))
 
     return {
-        'stiff_reg': stiff_mat_reg,
-        'stiff_sing': stiff_mat_sing,
-        'mass_reg': mass_mat_reg,
-        'mass_sing': mass_mat_sing
+        "stiff_reg": stiff_mat_reg,
+        "stiff_sing": stiff_mat_sing,
+        "mass_reg": mass_mat_reg,
+        "mass_sing": mass_mat_sing,
     }
 
 
 def test_isotropic_stiffness_regular_vs_singular(isotropic_data):
-    np.testing.assert_allclose(isotropic_data['stiff_reg'], isotropic_data['stiff_sing'], atol=1e-6)
+    np.testing.assert_allclose(
+        isotropic_data["stiff_reg"], isotropic_data["stiff_sing"], atol=1e-6
+    )
 
 
 def test_isotropic_mass_regular_vs_singular(isotropic_data):
-    np.testing.assert_allclose(isotropic_data['mass_reg'], isotropic_data['mass_sing'], atol=1e-6)
+    np.testing.assert_allclose(
+        isotropic_data["mass_reg"], isotropic_data["mass_sing"], atol=1e-6
+    )
 
 
 def test_isotropic_stiffness_reference(isotropic_data):
     ref_stiff = parse_matrix(reference_stiffness)
-    np.testing.assert_allclose(isotropic_data['stiff_reg'], ref_stiff, atol=1e-6)
+    np.testing.assert_allclose(isotropic_data["stiff_reg"], ref_stiff, atol=1e-6)
 
 
 def test_isotropic_mass_reference(isotropic_data):
     ref_mass = parse_matrix(reference_mass)
-    np.testing.assert_allclose(isotropic_data['mass_reg'], ref_mass, atol=1e-6)
+    np.testing.assert_allclose(isotropic_data["mass_reg"], ref_mass, atol=1e-6)
 
 
 reference_stiffness = """3.1106440126718432e-01 -5.7626764670407046e-07 0.0000000000000000e+00 0.0000000000000000e+00 0.0000000000000000e+00 1.8332325847382240e-16 

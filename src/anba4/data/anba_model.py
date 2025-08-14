@@ -40,10 +40,22 @@ def initialize_anba_model(
     input_data: Union[InputData, SerializableInputData],
 ) -> AnbaData:
     if isinstance(input_data, SerializableInputData):
-        # Construct Dolfin mesh from points and cells
-        coordinates = np.array([p[:2] for p in input_data.points])  # Assume 2D, z=0
-        cells = np.array(input_data.cells, dtype=np.uintp)
-        mesh = Mesh(coordinates, cells)
+        # Construct Dolfin mesh from points and cells using MeshEditor
+        coordinates = np.array(
+            [p[:2] for p in input_data.points]
+        )  # Assume 2D, ignore z
+        cells = np.array(input_data.cells, dtype="uintp")
+
+        mesh = Mesh()
+        editor = MeshEditor()
+        editor.open(mesh, "triangle", 2, 2)  # tdim=2, gdim=2
+        editor.init_vertices(coordinates.shape[0])
+        for i, coord in enumerate(coordinates):
+            editor.add_vertex(i, coord)
+        editor.init_cells(cells.shape[0])
+        for i, cell in enumerate(cells):
+            editor.add_cell(i, cell)
+        editor.close()
 
         # Reconstruct matLibrary from dicts
         matLibrary: List[material.Material] = []
