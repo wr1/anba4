@@ -28,6 +28,26 @@ import pyvista as pv
 import numpy as np
 
 
+def export_model(
+    mesh, materials, fiber_orientations, plane_orientations, mesh_name="mesh.vtu"
+):
+    pts = np.hstack((mesh.coordinates(), np.zeros((mesh.coordinates().shape[0], 1))))
+
+    cells = np.hstack(
+        (3 * np.ones((mesh.cells().shape[0], 1)).astype(np.int64), mesh.cells())
+    )
+
+    grd = pv.UnstructuredGrid(
+        cells,
+        [pv.CellType.TRIANGLE for i in range(mesh.cells().shape[0])],
+        pts,
+    )
+    grd.cell_data["Materials"] = materials.array()
+    grd.cell_data["FiberOrientations"] = fiber_orientations.array()
+    grd.cell_data["PlaneOrientations"] = plane_orientations.array()
+    grd.save(mesh_name)
+
+
 dolfin.parameters["form_compiler"]["optimize"] = True
 dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
 
@@ -61,26 +81,6 @@ mat1 = anba4.material.IsotropicMaterial(matMechanicProp, 1.0)
 
 matLibrary = []
 matLibrary.append(mat1)
-
-
-def export_model(
-    mesh, materials, fiber_orientations, plane_orientations, mesh_name="mesh.vtu"
-):
-    pts = np.hstack((mesh.coordinates(), np.zeros((mesh.coordinates().shape[0], 1))))
-
-    cells = np.hstack(
-        (3 * np.ones((mesh.cells().shape[0], 1)).astype(np.int64), mesh.cells())
-    )
-
-    grd = pv.UnstructuredGrid(
-        cells,
-        [pv.CellType.TRIANGLE for i in range(mesh.cells().shape[0])],
-        pts,
-    )
-    grd.cell_data["Materials"] = materials.array()
-    grd.cell_data["FiberOrientations"] = fiber_orientations.array()
-    grd.cell_data["PlaneOrientations"] = plane_orientations.array()
-    grd.save(mesh_name)
 
 
 export_model(
