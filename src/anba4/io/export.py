@@ -2,6 +2,8 @@ import json
 import numpy as np
 import pyvista as pv
 import dolfin
+from petsc4py import PETSc
+from typing import List
 
 from ..data.data_model import InputData, SerializableInputData
 
@@ -46,3 +48,22 @@ def import_model_json(filename: str = "model.json") -> SerializableInputData:
     with open(filename, "r") as f:
         data = json.load(f)
     return SerializableInputData(**data)
+
+
+def serialize_matrix(matrix: PETSc.Mat) -> List[List[float]]:
+    """Serialize PETSc matrix to list of lists."""
+    rows, cols = matrix.getSize()
+    mat_list = []
+    for i in range(rows):
+        row = []
+        for j in range(cols):
+            row.append(matrix[i, j])
+        mat_list.append(row)
+    return mat_list
+
+
+def serialize_field(field: dolfin.Function) -> List[List[float]]:
+    """Serialize Dolfin vector field to list of lists (per component)."""
+    array = field.vector().get_local()
+    dim = field.function_space().ufl_element().value_shape()[0]
+    return array.reshape(-1, dim).tolist()
