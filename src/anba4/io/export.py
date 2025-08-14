@@ -3,7 +3,7 @@ import numpy as np
 import pyvista as pv
 import dolfin
 
-from ..data.data_model import InputData
+from ..data.data_model import InputData, SerializableInputData
 
 
 def export_model_vtu(
@@ -39,3 +39,10 @@ def export_model_json(
     data = input_data.to_dict()
     with open(filename, "w") as f:
         json.dump(data, f, indent=4)
+
+
+def import_model_json(filename: str = "model.json") -> SerializableInputData:
+    """Import model input data from JSON format."""
+    with open(filename, "r") as f:
+        data = json.load(f)
+    return SerializableInputData(**data)
