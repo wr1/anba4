@@ -28,6 +28,8 @@ import numpy as np
 # from anba4 import *
 import dolfin
 import anba4
+from anba4.io.export import export_model_json
+
 
 dolfin.parameters["form_compiler"]["optimize"] = True
 dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
@@ -211,16 +213,22 @@ mat1 = anba4.material.OrthotropicMaterial(matMechanicProp)
 matLibrary = []
 matLibrary.append(mat1)
 
-anbax_data = anba4.initialize_anba_model(
-    mesh,
-    1,
-    matLibrary,
-    materials,
-    plane_orientations,
-    fiber_orientations,
+
+input_data = anba4.InputData(
+    mesh=mesh,
+    degree=1,
+    matLibrary=matLibrary,
+    materials=materials,
+    plane_orientations=plane_orientations,
+    fiber_orientations=fiber_orientations,
     singular=True,
     scaling_constraint=1.0e9,
 )
+
+anbax_data = anba4.initialize_anba_model(input_data)
+
+export_model_json(input_data, "mesh_rotation_singular.json")
+
 anba4.initialize_fe_functions(anbax_data)
 anba4.initialize_chains(anbax_data)
 stiff = anba4.compute_stiffness(anbax_data)

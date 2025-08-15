@@ -21,6 +21,7 @@
 # ----------------------------------------------------------------------
 #
 
+from anba4.io.export import export_model_json
 import dolfin
 import numpy as np
 import anba4
@@ -218,15 +219,20 @@ matLibrary.append(mat1)
 matLibrary.append(mat2)
 
 
-anbax_data = anba4.initialize_anba_model(
-    mesh,
-    1,
-    matLibrary,
-    materials,
-    plane_orientations,
-    fiber_orientations,
+input_data = anba4.InputData(
+    mesh=mesh,
+    degree=1,
+    matLibrary=matLibrary,
+    materials=materials,
+    plane_orientations=plane_orientations,
+    fiber_orientations=fiber_orientations,
     scaling_constraint=1.0e9,
 )
+
+anbax_data = anba4.initialize_anba_model(input_data)
+
+export_model_json(input_data, "mesh_rotation_multimat.json")
+
 anba4.initialize_fe_functions(anbax_data)
 anba4.initialize_chains(anbax_data)
 stiff = anba4.compute_stiffness(anbax_data)

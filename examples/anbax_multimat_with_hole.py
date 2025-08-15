@@ -24,6 +24,7 @@
 import dolfin
 import anba4
 from matplotlib import pyplot as plt
+from anba4.io.export import export_model_json
 
 dolfin.parameters["form_compiler"]["optimize"] = True
 dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
@@ -77,16 +78,18 @@ matLibrary.append(mat1)
 matLibrary.append(mat2)
 matLibrary.append(mat3)
 
-
-anbax_data = anba4.initialize_anba_model(
-    mesh,
-    1,
-    matLibrary,
-    materials,
-    plane_orientations,
-    fiber_orientations,
-    scaling_constraint=1,
+input_data = anba4.InputData(
+    mesh=mesh,
+    degree=1,
+    matLibrary=matLibrary,
+    materials=materials,
+    plane_orientations=plane_orientations,
+    fiber_orientations=fiber_orientations,
 )
+
+anbax_data = anba4.initialize_anba_model(input_data)
+
+export_model_json(input_data, "mesh_multimat_with_hole.json")
 anba4.initialize_fe_functions(anbax_data)
 anba4.initialize_chains(anbax_data)
 stiff = anba4.compute_stiffness(anbax_data)
@@ -100,7 +103,7 @@ JordanChains.parameters["rewrite_function_mesh"] = False
 JordanChains.parameters["flush_output"] = True
 for i in range(len(anbax_data.chains.chains_d)):
     for j in range(len(anbax_data.chains.chains_d[i])):
-        # print('chain_'+str(i)+'_'+str(j))
+        print("chain_" + str(i) + "_" + str(j))
         chain = dolfin.Function(
             anbax_data.fe_functions.UF3, name="chain_" + str(i) + "_" + str(j)
         )

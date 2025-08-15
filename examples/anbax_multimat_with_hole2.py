@@ -23,6 +23,7 @@
 
 # import dolfin as df
 # from anba4 import *
+from anba4.io.export import export_model_json
 import dolfin
 import anba4
 import mshr
@@ -74,16 +75,20 @@ matLibrary.append(mat1)
 matLibrary.append(mat2)
 matLibrary.append(mat3)
 
-
-anbax_data = anba4.initialize_anba_model(
-    mesh,
-    1,
-    matLibrary,
-    materials,
-    plane_orientations,
-    fiber_orientations,
+input_data = anba4.InputData(
+    mesh=mesh,
+    degree=1,
+    matLibrary=matLibrary,
+    materials=materials,
+    plane_orientations=plane_orientations,
+    fiber_orientations=fiber_orientations,
     scaling_constraint=1,
 )
+export_model_json(input_data, "mesh_multimat_with_hole2.json")
+
+anbax_data = anba4.initialize_anba_model(input_data)
+
+
 anba4.initialize_fe_functions(anbax_data)
 anba4.initialize_chains(anbax_data)
 stiff = anba4.compute_stiffness(anbax_data)

@@ -21,6 +21,7 @@
 # ----------------------------------------------------------------------
 #
 
+from anba4.io.export import export_model_json
 import dolfin
 import anba4
 
@@ -54,15 +55,20 @@ matLibrary = []
 matLibrary.append(mat1)
 
 
-anbax_data = anba4.initialize_anba_model(
-    mesh,
-    2,
-    matLibrary,
-    materials,
-    plane_orientations,
-    fiber_orientations,
+input_data = anba4.InputData(
+    mesh=mesh,
+    degree=2,
+    matLibrary=matLibrary,
+    materials=materials,
+    plane_orientations=plane_orientations,
+    fiber_orientations=fiber_orientations,
     singular=True,
 )
+export_model_json(input_data, "mesh_isotropic_singular.json")
+
+anbax_data = anba4.initialize_anba_model(input_data)
+
+
 anba4.initialize_fe_functions(anbax_data)
 anba4.initialize_chains(anbax_data)
 
