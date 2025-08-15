@@ -37,9 +37,11 @@ def strain_field(
 ):
     singular = data.input_data.singular
     if reference == "local":
-        strain_comp = lambda u, up: rotated_epsilon(data, u, up)
+        def strain_comp(u, up):
+            return rotated_epsilon(data, u, up)
     elif reference == "global":
-        strain_comp = lambda u, up: epsilon(u, up)
+        def strain_comp(u, up):
+            return epsilon(u, up)
     else:
         raise ValueError(
             'reference argument should be equal to either to"local" or to "global", got "'

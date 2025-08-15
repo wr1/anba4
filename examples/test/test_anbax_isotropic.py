@@ -35,9 +35,15 @@ class Test_Isotropic(unittest.TestCase):
         matLibrary = []
         matLibrary.append(mat1)
 
-        anbax_data = initialize_anba_model(
-            mesh, 2, matLibrary, materials, plane_orientations, fiber_orientations
+        input_data = InputData(
+            mesh=mesh,
+            degree=2,
+            matLibrary=matLibrary,
+            materials=materials,
+            plane_orientations=plane_orientations,
+            fiber_orientations=fiber_orientations,
         )
+        anbax_data = initialize_anba_model(input_data)
         initialize_fe_functions(anbax_data)
         initialize_chains(anbax_data)
         stiff = compute_stiffness(anbax_data)

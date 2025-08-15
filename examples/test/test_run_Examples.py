@@ -18,7 +18,6 @@ def execfile(filepath, globals=None, locals=None):
 
 class TestExamples(unittest.TestCase):
     def test_run_examples(self):
-        exclude_list = []
         # Add tests to class
         MyDir = os.path.dirname(__file__)
         files = glob.glob(os.path.join(MyDir, "../*.py"))

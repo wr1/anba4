@@ -37,9 +37,11 @@ def stress_field(
 ):
     singular = data.input_data.singular
     if reference == "local":
-        stress_comp = lambda u, up: RotatedSigma(data, u, up)
+        def stress_comp(u, up):
+            return RotatedSigma(data, u, up)
     elif reference == "global":
-        stress_comp = lambda u, up: Sigma(data, u, up)
+        def stress_comp(u, up):
+            return Sigma(data, u, up)
     else:
         raise ValueError(
             'reference argument should be equal to either to"local" or to "global", got "'

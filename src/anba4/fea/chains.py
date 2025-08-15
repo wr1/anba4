@@ -31,10 +31,8 @@ def initialize_chains(data: AnbaData) -> AnbaData:
     singular = data.input_data.singular
     if singular:
         element = data.fe_functions.UF3.ufl_element()
-        base_dim = 3
     else:
         element = data.fe_functions.UF3R4.ufl_element()
-        base_dim = 7
     data.chains.base_chains_expression = []
     data.chains.linear_chains_expression = []
 

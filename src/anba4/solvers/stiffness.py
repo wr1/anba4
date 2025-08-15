@@ -73,7 +73,7 @@ def compute_stiffness(data: AnbaData) -> Any:
         ]
     )
 
-    ES = derivative(stress, U, UT)
+    derivative(stress, U, UT)
     ES_t = derivative(stress_s, U, UT)
     ES_n = derivative(stress_s, UP, UT)
     En_t = derivative(stress_n, U, UT)

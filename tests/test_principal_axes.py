@@ -42,15 +42,16 @@ def principal_axes_data():
     matLibrary = [mat1]
 
     # Regular
-    anbax_data_reg = initialize_anba_model(
-        mesh,
-        2,
-        matLibrary,
-        materials,
-        plane_orientations,
-        fiber_orientations,
+    input_data_reg = InputData(
+        mesh=mesh,
+        degree=2,
+        matLibrary=matLibrary,
+        materials=materials,
+        plane_orientations=plane_orientations,
+        fiber_orientations=fiber_orientations,
         singular=False,
     )
+    anbax_data_reg = initialize_anba_model(input_data_reg)
     initialize_fe_functions(anbax_data_reg)
     initialize_chains(anbax_data_reg)
     stiff_reg = compute_stiffness(anbax_data_reg)
@@ -61,15 +62,16 @@ def principal_axes_data():
     angle_reg = utils.PrincipalAxesRotationAngle(decoupled_stiff_reg)
 
     # Singular
-    anbax_data_sing = initialize_anba_model(
-        mesh,
-        2,
-        matLibrary,
-        materials,
-        plane_orientations,
-        fiber_orientations,
+    input_data_sing = InputData(
+        mesh=mesh,
+        degree=2,
+        matLibrary=matLibrary,
+        materials=materials,
+        plane_orientations=plane_orientations,
+        fiber_orientations=fiber_orientations,
         singular=True,
     )
+    anbax_data_sing = initialize_anba_model(input_data_sing)
     initialize_fe_functions(anbax_data_sing)
     initialize_chains(anbax_data_sing)
     stiff_sing = compute_stiffness(anbax_data_sing)
