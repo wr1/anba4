@@ -23,9 +23,10 @@ jobs:
         auto-update-conda: true
         python-version: 3.9
         activate-environment: test
-
-    - name: Create environment
-      run: conda env create -f environment.yml
+        environment-file: environment.yml
+        channels: conda-forge
+    # - name: Create environment
+    #   run: conda env create -f environment.yml
 
     - name: Install package
       run: pip install -e .
