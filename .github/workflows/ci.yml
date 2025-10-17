@@ -10,6 +10,10 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        shell: bash -l {0}
+
     steps:
     - uses: actions/checkout@v3
 
@@ -18,18 +22,13 @@ jobs:
       with:
         auto-update-conda: true
         python-version: 3.9
+        activate-environment: test
 
     - name: Create environment
-      run: |
-        conda env create -f environment.yml
-        conda activate test
+      run: conda env create -f environment.yml
 
     - name: Install package
-      run: |
-        conda activate test
-        pip install -e .
+      run: pip install -e .
 
     - name: Run tests
-      run: |
-        conda activate test
-        pytest tests/ -v
+      run: pytest tests/ -v
