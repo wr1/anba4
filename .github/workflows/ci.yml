@@ -1,0 +1,35 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Conda
+      uses: conda-incubator/setup-miniconda@v2
+      with:
+        auto-update-conda: true
+        python-version: 3.9
+
+    - name: Create environment
+      run: |
+        conda env create -f environment.yml
+        conda activate test
+
+    - name: Install package
+      run: |
+        conda activate test
+        pip install -e .
+
+    - name: Run tests
+      run: |
+        conda activate test
+        pytest tests/ -v
