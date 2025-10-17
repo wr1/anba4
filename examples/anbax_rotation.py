@@ -234,7 +234,7 @@ input_data = anba4.InputData(
     fiber_orientations=fiber_orientations,
     scaling_constraint=1.0e9,
 )
-export_model_json(input_data=input_data, "mesh_rotation.json")
+export_model_json(input_data=input_data, filename="mesh_rotation.json")
 
 
 anbax_data = anba4.initialize_anba_model(input_data)

@@ -225,10 +225,20 @@ matLibrary = []
 matLibrary.append(mat1)
 
 
-input_data = anba4.InputData(mesh, degree = 1, matLibrary, materials, plane_orientations, fiber_orientations, scaling_constraint=1.0e9)
+# print(mesh)
+
+input_data = anba4.InputData(
+    mesh=mesh,
+    degree=1,
+    matLibrary=matLibrary,
+    materials=materials,
+    plane_orientations=plane_orientations,
+    fiber_orientations=fiber_orientations,
+    scaling_constraint=1.0e9,
+)
 
 
-anbax_data = anba4.initialize_anba_model(input_data) 
+anbax_data = anba4.initialize_anba_model(input_data)
 
 anba4.initialize_fe_functions(anbax_data)
 anba4.initialize_chains(anbax_data)
