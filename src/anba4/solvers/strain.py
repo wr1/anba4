@@ -25,7 +25,7 @@ from dolfin import split, Function
 from petsc4py import PETSc
 
 from ..utils import epsilon, rotated_epsilon, local_project
-from ..voight_notation import (
+from ..core.voight_notation import (
     strainTensorToStrainVector,
     strainTensorToParaviewStrainVector,
 )
@@ -37,9 +37,11 @@ def strain_field(
 ):
     singular = data.input_data.singular
     if reference == "local":
+
         def strain_comp(u, up):
             return rotated_epsilon(data, u, up)
     elif reference == "global":
+
         def strain_comp(u, up):
             return epsilon(u, up)
     else:

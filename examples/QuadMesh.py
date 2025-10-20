@@ -177,17 +177,6 @@ g_yz = 6.0e9
 nu_xy = 0.34
 nu_zx = 0.3
 nu_zy = 0.3
-# Assmble into material mechanical property Matrix.
-matMechanicProp = np.zeros((3, 3))
-matMechanicProp[0, 0] = e_xx
-matMechanicProp[0, 1] = e_yy
-matMechanicProp[0, 2] = e_zz
-matMechanicProp[1, 0] = g_yz
-matMechanicProp[1, 1] = g_xz
-matMechanicProp[1, 2] = g_xy
-matMechanicProp[2, 0] = nu_zy
-matMechanicProp[2, 1] = nu_zx
-matMechanicProp[2, 2] = nu_xy
 
 mesh = build_mesh()
 
@@ -219,7 +208,10 @@ rotate = dolfin.Expression(
 dolfin.ALE.move(mesh, rotate)
 
 # Build material property library.
-mat1 = anba4.material.OrthotropicMaterial(matMechanicProp)
+E = [e_xx, e_yy, e_zz]
+G = [g_yz, g_xz, g_xy]
+nu = [nu_zy, nu_zx, nu_xy]
+mat1 = anba4.material.OrthotropicMaterial(E, G, nu)
 
 matLibrary = []
 matLibrary.append(mat1)

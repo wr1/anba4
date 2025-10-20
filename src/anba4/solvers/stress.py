@@ -25,7 +25,7 @@ from dolfin import *
 from petsc4py import PETSc
 
 from ..utils import Sigma, RotatedSigma, local_project
-from ..voight_notation import (
+from ..core.voight_notation import (
     stressTensorToStressVector,
     stressTensorToParaviewStressVector,
 )
@@ -37,9 +37,11 @@ def stress_field(
 ):
     singular = data.input_data.singular
     if reference == "local":
+
         def stress_comp(u, up):
             return RotatedSigma(data, u, up)
     elif reference == "global":
+
         def stress_comp(u, up):
             return Sigma(data, u, up)
     else:

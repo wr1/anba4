@@ -23,16 +23,6 @@ def rotation_multimat_data():
     nu_xy = 0.34
     nu_zx = 0.3
     nu_zy = 0.3
-    matMechanicProp = np.zeros((3, 3))
-    matMechanicProp[0, 0] = e_xx
-    matMechanicProp[0, 1] = e_yy
-    matMechanicProp[0, 2] = e_zz
-    matMechanicProp[1, 0] = g_yz
-    matMechanicProp[1, 1] = g_xz
-    matMechanicProp[1, 2] = g_xy
-    matMechanicProp[2, 0] = nu_zy
-    matMechanicProp[2, 1] = nu_zx
-    matMechanicProp[2, 2] = nu_xy
     matMechanicProp1 = [9.8e9 / 100.0, 0.3]
     sectionWidth = 3.0023e-2
     sectionHeight = 1.9215e-3
@@ -159,7 +149,10 @@ def rotation_multimat_data():
         degree=1,
     )
     dolfin.ALE.move(mesh, rotate)
-    mat1 = material.OrthotropicMaterial(matMechanicProp)
+    E = [e_xx, e_yy, e_zz]
+    G = [g_yz, g_xz, g_xy]
+    nu = [nu_zy, nu_zx, nu_xy]
+    mat1 = material.OrthotropicMaterial(E, G, nu)
     mat2 = material.IsotropicMaterial(matMechanicProp1)
     matLibrary = [mat1, mat2]
 

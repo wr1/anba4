@@ -1,5 +1,4 @@
 """Utility functions for beam analysis."""
-
 import numpy as np
 import dolfin
 

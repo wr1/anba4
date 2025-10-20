@@ -10,11 +10,6 @@
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    Anba is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU General Public License for more details.
-#
 #    You should have received a copy of the GNU General Public License
 #    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
 #
@@ -43,17 +38,6 @@ g_yz = 6.0e9
 nu_xy = 0.34
 nu_zx = 0.3
 nu_zy = 0.3
-# Assmble into material mechanical property Matrix.
-matMechanicProp = np.zeros((3, 3))
-matMechanicProp[0, 0] = e_xx
-matMechanicProp[0, 1] = e_yy
-matMechanicProp[0, 2] = e_zz
-matMechanicProp[1, 0] = g_yz
-matMechanicProp[1, 1] = g_xz
-matMechanicProp[1, 2] = g_xy
-matMechanicProp[2, 0] = nu_zy
-matMechanicProp[2, 1] = nu_zx
-matMechanicProp[2, 2] = nu_xy
 
 matMechanicProp1 = [9.8e9 / 100.0, 0.3]
 # Meshing domain.
@@ -215,7 +199,10 @@ rotate = dolfin.Expression(
 dolfin.ALE.move(mesh, rotate)
 
 # Build material property library.
-mat1 = anba4.material.OrthotropicMaterial(matMechanicProp)
+E = [e_xx, e_yy, e_zz]
+G = [g_yz, g_xz, g_xy]
+nu = [nu_zy, nu_zx, nu_xy]
+mat1 = anba4.material.OrthotropicMaterial(E, G, nu)
 mat2 = anba4.material.IsotropicMaterial(matMechanicProp1)
 matLibrary = []
 matLibrary.append(mat1)

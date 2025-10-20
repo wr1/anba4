@@ -1,9 +1,27 @@
-import numpy as np
+#
+# Copyright (C) 2018 Marco Morandini
+#
+# ----------------------------------------------------------------------
+#
+#    This file is part of Anba.
+#
+#    Anba is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
+#
+# ----------------------------------------------------------------------
+
+
 from dolfin import UserExpression
 import math
-
+import numpy as np
 
 class Material:
+    """Base material class."""
     def __init__(self, rho=0.0):
         self.rho = rho
         self.transform_matrix = np.zeros((6, 6))
@@ -11,9 +29,11 @@ class Material:
         self.mat_rotated_stress_modulus = np.zeros((6, 6))
 
     def Rho(self):
+        """Get density."""
         return self.rho
 
     def transformation_matrix(self, alpha, beta):
+        """Compute transformation matrix."""
         pi = math.pi
         pi180 = pi / 180.0
 
@@ -62,16 +82,19 @@ class Material:
         return self.transform_matrix
 
     def compute_elastic_modulus(self, alpha, beta):
+        """Compute elastic modulus."""
         raise NotImplementedError
 
     def compute_rotated_stress_elastic_modulus(self, alpha, beta):
+        """Compute rotated stress elastic modulus."""
         raise NotImplementedError
 
     def to_dict(self):
+        """Serialize to dict."""
         raise NotImplementedError
 
-
 class IsotropicMaterial(Material):
+    """Isotropic material."""
     def __init__(self, mat_mechanic_prop, rho=0.0):
         super().__init__(rho)
         self.E = mat_mechanic_prop[0]
@@ -101,14 +124,17 @@ class IsotropicMaterial(Material):
         self.mat_modulus[5, 5] = G
 
     def compute_elastic_modulus(self, alpha, beta):
+        """Compute elastic modulus."""
         return self.mat_modulus
 
     def compute_rotated_stress_elastic_modulus(self, alpha, beta):
+        """Compute rotated stress elastic modulus."""
         TM = self.transformation_matrix(alpha, beta)
         self.mat_rotated_stress_modulus = np.dot(self.mat_modulus, TM.T)
         return self.mat_rotated_stress_modulus
 
     def to_dict(self):
+        """Serialize to dict."""
         return {
             "type": "isotropic",
             "E": self.E,
@@ -118,23 +144,20 @@ class IsotropicMaterial(Material):
 
     @classmethod
     def from_dict(cls, d: dict):
+        """Deserialize from dict."""
         mat_mechanic_prop = [d["E"], d["nu"]]
         return cls(mat_mechanic_prop, d["rho"])
 
-
 class OrthotropicMaterial(Material):
-    def __init__(self, mat_mechanic_prop, rho=0.0):
+    """Orthotropic material."""
+    def __init__(self, E, G, nu, rho=0.0):
         super().__init__(rho)
-        self.props = np.copy(mat_mechanic_prop)
-        e_xx = mat_mechanic_prop[0, 0]
-        e_yy = mat_mechanic_prop[0, 1]
-        e_zz = mat_mechanic_prop[0, 2]
-        g_yz = mat_mechanic_prop[1, 0]
-        g_xz = mat_mechanic_prop[1, 1]
-        g_xy = mat_mechanic_prop[1, 2]
-        nu_zy = mat_mechanic_prop[2, 0]
-        nu_zx = mat_mechanic_prop[2, 1]
-        nu_xy = mat_mechanic_prop[2, 2]
+        self.E = np.array(E)
+        self.G = np.array(G)
+        self.nu = np.array(nu)
+        e_xx, e_yy, e_zz = self.E
+        g_yz, g_xz, g_xy = self.G
+        nu_zy, nu_zx, nu_xy = self.nu
 
         nu_yx = e_yy * nu_xy / e_xx
         nu_xz = e_xx * nu_zx / e_zz
@@ -166,29 +189,39 @@ class OrthotropicMaterial(Material):
         self.mat_local_modulus[5, 5] = g_xy
 
     def compute_elastic_modulus(self, alpha, beta):
+        """Compute elastic modulus."""
         TM = self.transformation_matrix(alpha, beta)
         self.mat_modulus = np.dot(np.dot(TM, self.mat_local_modulus), TM.T)
         return self.mat_modulus
 
     def compute_rotated_stress_elastic_modulus(self, alpha, beta):
+        """Compute rotated stress elastic modulus."""
         TM = self.transformation_matrix(alpha, beta)
         self.mat_rotated_stress_modulus = np.dot(self.mat_local_modulus, TM.T)
         return self.mat_rotated_stress_modulus
 
     def to_dict(self):
+        """Serialize to dict."""
         return {
             "type": "orthotropic",
-            "props": self.props.tolist(),
+            "E": self.E.tolist(),
+            "G": self.G.tolist(),
+            "nu": self.nu.tolist(),
             "rho": self.rho,
         }
 
     @classmethod
     def from_dict(cls, d: dict):
-        mat_mechanic_prop = np.array(d["props"])
-        return cls(mat_mechanic_prop, d["rho"])
-
+        """Deserialize from dict."""
+        return cls(
+            np.array(d["E"]),
+            np.array(d["G"]),
+            np.array(d["nu"]),
+            d["rho"],
+        )
 
 class ElasticModulus(UserExpression):
+    """Elastic modulus expression."""
     def __init__(
         self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
     ):
@@ -210,8 +243,8 @@ class ElasticModulus(UserExpression):
     def value_shape(self):
         return (36,)
 
-
 class RotatedStressElasticModulus(UserExpression):
+    """Rotated stress elastic modulus expression."""
     def __init__(
         self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
     ):
@@ -233,8 +266,8 @@ class RotatedStressElasticModulus(UserExpression):
     def value_shape(self):
         return (36,)
 
-
 class TransformationMatrix(UserExpression):
+    """Transformation matrix expression."""
     def __init__(
         self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
     ):
@@ -254,8 +287,8 @@ class TransformationMatrix(UserExpression):
     def value_shape(self):
         return (36,)
 
-
 class MaterialDensity(UserExpression):
+    """Material density expression."""
     def __init__(self, mats_library, material_id, **kwargs):
         super().__init__(**kwargs)
         self.mats_library = mats_library
