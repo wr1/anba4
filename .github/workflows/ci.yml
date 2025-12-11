@@ -27,7 +27,8 @@ jobs:
         channels: conda-forge
     # - name: Create environment
     #   run: conda env create -f environment.yml
-
+    - name: Ensure libmvec is present
+      run:  sudo apt-get update && sudo apt-get install -y build-essential gcc g++ pkg-config sudo apt-get install -y libblas-dev liblapack-dev
     - name: Install package
       run: pip install -e .
 
