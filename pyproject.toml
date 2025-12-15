@@ -19,5 +19,5 @@ dependencies = [
 ]
 
 [project.scripts]
-anba4-run = "anba4.cli.main:run"
+anba4-run = "anba4.cli.main:main"
 

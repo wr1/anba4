@@ -8,6 +8,20 @@ from typing import List
 from ..data.data_model import InputData, SerializableInputData
 
 
+def dolfin_to_pyvista_mesh(mesh: dolfin.Mesh) -> pv.UnstructuredGrid:
+    """Convert a Dolfin mesh to a PyVista UnstructuredGrid."""
+    pts = np.hstack((mesh.coordinates(), np.zeros((mesh.coordinates().shape[0], 1))))
+    cells = np.hstack(
+        (3 * np.ones((mesh.cells().shape[0], 1)).astype(np.int64), mesh.cells())
+    )
+    grd = pv.UnstructuredGrid(
+        cells,
+        [pv.CellType.TRIANGLE for i in range(mesh.cells().shape[0])],
+        pts,
+    )
+    return grd
+
+
 def export_model_vtu(
     mesh: dolfin.Mesh,
     materials: dolfin.MeshFunction,
@@ -16,17 +30,17 @@ def export_model_vtu(
     mesh_name: str = "mesh.vtu",
 ):
     """Export model to VTU format using PyVista."""
-    pts = np.hstack((mesh.coordinates(), np.zeros((mesh.coordinates().shape[0], 1))))
+    grd = dolfin_to_pyvista_mesh(mesh)
 
-    cells = np.hstack(
-        (3 * np.ones((mesh.cells().shape[0], 1)).astype(np.int64), mesh.cells())
-    )
-
-    grd = pv.UnstructuredGrid(
-        cells,
-        [pv.CellType.TRIANGLE for i in range(mesh.cells().shape[0])],
-        pts,
-    )
+    # pts = np.hstack((mesh.coordinates(), np.zeros((mesh.coordinates().shape[0], 1))))
+    # cells = np.hstack(
+    #     (3 * np.ones((mesh.cells().shape[0], 1)).astype(np.int64), mesh.cells())
+    # )
+    # grd = pv.UnstructuredGrid(
+    #     cells,
+    #     [pv.CellType.TRIANGLE for i in range(mesh.cells().shape[0])],
+    #     pts,
+    # )
     grd.cell_data["Materials"] = materials.array()
     grd.cell_data["FiberOrientations"] = fiber_orientations.array()
     grd.cell_data["PlaneOrientations"] = plane_orientations.array()
