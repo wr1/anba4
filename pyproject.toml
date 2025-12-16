@@ -15,9 +15,7 @@ dependencies = [
   "petsc4py",
   "numpy",
   "pydantic",
-  "click",
 ]
 
 [project.scripts]
 anba4-run = "anba4.cli.main:main"
-
