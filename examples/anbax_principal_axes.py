@@ -5,11 +5,6 @@
 #
 #    This file is part of Anba.
 #
-#    Anba is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
 #    Anba is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -20,7 +15,17 @@
 
 import dolfin
 import mshr
-from anba4 import *
+import numpy as np
+from anba4 import (
+    material,
+    InputData,
+    initialize_anba_model,
+    initialize_fe_functions,
+    initialize_chains,
+    compute_stiffness,
+    compute_inertia,
+    utils,
+)
 
 # Basic material parameters
 dolfin.parameters["form_compiler"]["optimize"] = True

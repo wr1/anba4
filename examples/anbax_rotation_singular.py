@@ -14,7 +14,16 @@
 #
 
 import dolfin
-from anba4 import *
+import numpy as np
+from anba4 import (
+    material,
+    InputData,
+    initialize_anba_model,
+    initialize_fe_functions,
+    initialize_chains,
+    compute_stiffness,
+    compute_inertia,
+)
 
 # Basic material parameters
 dolfin.parameters["form_compiler"]["optimize"] = True

@@ -5,18 +5,10 @@
 #
 #    This file is part of Anba.
 #
-#    Anba is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
 #    Anba is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
-#
-#    You should have received a copy of the GNU General Public License
-#    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
 #
 # ----------------------------------------------------------------------
 #
@@ -122,15 +114,15 @@ def initialize_chains(data: AnbaData) -> AnbaData:
     if not singular:
         for i in range(4):
             for k in range(2):
-                (d, l) = dolfin.split(data.chains.chains[i][k])
+                (d, l_part) = dolfin.split(data.chains.chains[i][k])
                 data.chains.chains_d[i].append(d)
-                data.chains.chains_l[i].append(l)
+                data.chains.chains_l[i].append(l_part)
 
         for i in range(2, 4):
             for k in range(2, 4):
-                (d, l) = dolfin.split(data.chains.chains[i][k])
+                (d, l_part) = dolfin.split(data.chains.chains[i][k])
                 data.chains.chains_d[i].append(d)
-                data.chains.chains_l[i].append(l)
+                data.chains.chains_l[i].append(l_part)
     else:
         data.chains.chains_d = (
             data.chains.chains
