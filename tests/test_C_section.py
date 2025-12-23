@@ -32,7 +32,7 @@ def c_section_data():
     materials.set_all(0)
     fiber_orientations.set_all(0.0)
     plane_orientations.set_all(90.0)
-    mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
+    mat1 = material.IsotropicMaterial(matMechanicProp[0], matMechanicProp[1], 1.0)
     matLibrary = [mat1]
 
     # Regular
@@ -41,8 +41,8 @@ def c_section_data():
         degree=2,
         matLibrary=matLibrary,
         materials=materials,
-        plane_orientations=plane_orientations,
         fiber_orientations=fiber_orientations,
+        plane_orientations=plane_orientations,
         singular=False,
     )
     anbax_data_reg = initialize_anba_model(input_data_reg)
@@ -61,8 +61,8 @@ def c_section_data():
         degree=2,
         matLibrary=matLibrary,
         materials=materials,
-        plane_orientations=plane_orientations,
         fiber_orientations=fiber_orientations,
+        plane_orientations=plane_orientations,
         singular=True,
     )
     anbax_data_sing = initialize_anba_model(input_data_sing)

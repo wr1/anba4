@@ -15,60 +15,69 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
-#
 # ----------------------------------------------------------------------
 #
 
 import dolfin
-import anba4
-from anba4.io.export import import_model_json
+import mshr
+from anba4 import *
 
-
+# Basic material parameters
 dolfin.parameters["form_compiler"]["optimize"] = True
 dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
+E = 1.0
+nu = 0.33
+thickness = 0.1
 
-# Load from the sample mesh.json or a generated one
-serializable_input = import_model_json("mesh.json")
-
-anbax_data = anba4.initialize_anba_model(serializable_input)
-anba4.initialize_fe_functions(anbax_data)
-anba4.initialize_chains(anbax_data)
-stiff = anba4.compute_stiffness(anbax_data)
-stiff.view()
-
-mass = anba4.compute_inertia(anbax_data)
-mass.view()
-
-output_file = "anbax_C_section_json.xdmf"
-stress_result_file = dolfin.XDMFFile(output_file)
-stress_result_file.parameters["functions_share_mesh"] = True
-stress_result_file.parameters["rewrite_function_mesh"] = False
-stress_result_file.parameters["flush_output"] = True
-
-stress = anba4.stress_field(
-    anbax_data,
-    [
-        1.0,
-        0.0,
-        0.0,
-    ],
-    [0.0, 0.0, 0.0],
-    "local",
-    "paraview",
+# Meshing domain
+Square1 = mshr.Rectangle(dolfin.Point(0.0, -1.0, 0.0), dolfin.Point(1.0, 1.0, 0.0))
+Square2 = mshr.Rectangle(
+    dolfin.Point(thickness, -1 + thickness, 0),
+    dolfin.Point(2.0, 1.0 - thickness, 0),
 )
-strain = anba4.strain_field(
-    anbax_data,
-    [
-        1.0,
-        0.0,
-        0.0,
-    ],
-    [0.0, 0.0, 0.0],
-    "local",
-    "paraview",
+C_shape = Square1 - Square2
+mesh = mshr.generate_mesh(C_shape, 64)
+
+# CompiledSubDomain
+materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
+fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
+
+materials.set_all(0)
+fiber_orientations.set_all(0.0)
+plane_orientations.set_all(90.0)
+
+# Build material property library
+mat1 = material.IsotropicMaterial(E, nu, 1.0)
+matLibrary = [mat1]
+
+# Create input data
+input_data = InputData(
+    mesh=mesh,
+    degree=2,
+    matLibrary=matLibrary,
+    materials=materials,
+    fiber_orientations=fiber_orientations,
+    plane_orientations=plane_orientations,
 )
-stress_result_file.write(stress, t=0.0)
-stress_result_file.write(strain, t=1.0)
-print(f"Stress and strain fields written to {output_file}")
+
+# Export to JSON
+model_filename = "anbax_C_model.json"
+export_model_json(input_data, model_filename)
+print(f"Model exported to {model_filename}")
+
+# Import from JSON
+serializable_input = import_model_json(model_filename)
+anbax_data = initialize_anba_model(serializable_input)
+initialize_fe_functions(anbax_data)
+initialize_chains(anbax_data)
+
+# Compute stiffness and mass
+stiff = compute_stiffness(anbax_data)
+mass = compute_inertia(anbax_data)
+
+# Print results
+print("Stiffness matrix:")
+print(stiff.getValues(range(6), range(6)))
+print("Mass matrix:")
+print(mass.getValues(range(6), range(6)))

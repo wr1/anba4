@@ -147,10 +147,9 @@ def rotation_data():
         degree=1,
     )
     dolfin.ALE.move(mesh, rotate)
-    E = [e_xx, e_yy, e_zz]
-    G = [g_yz, g_xz, g_xy]
-    nu = [nu_zy, nu_zx, nu_xy]
-    mat1 = material.OrthotropicMaterial(E, G, nu)
+    mat1 = material.OrthotropicMaterial(
+        e_xx, e_yy, e_zz, g_xy, g_xz, g_yz, nu_xy, nu_zx, nu_zy
+    )
     matLibrary = [mat1]
 
     # Regular

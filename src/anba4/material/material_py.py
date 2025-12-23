@@ -10,8 +10,10 @@
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
+#    Anba is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 #
 # ----------------------------------------------------------------------
 
@@ -20,8 +22,10 @@ from dolfin import UserExpression
 import math
 import numpy as np
 
+
 class Material:
     """Base material class."""
+
     def __init__(self, rho=0.0):
         self.rho = rho
         self.transform_matrix = np.zeros((6, 6))
@@ -93,19 +97,21 @@ class Material:
         """Serialize to dict."""
         raise NotImplementedError
 
+
 class IsotropicMaterial(Material):
     """Isotropic material."""
-    def __init__(self, mat_mechanic_prop, rho=0.0):
-        super().__init__(rho)
-        self.E = mat_mechanic_prop[0]
-        self.nu = mat_mechanic_prop[1]
-        E = self.E
-        nu = self.nu
-        G = E / (2 * (1 + nu))
 
-        delta = E / (1.0 + nu) / (1 - 2.0 * nu)
-        diag = (1.0 - nu) * delta
-        off_diag = nu * delta
+    def __init__(self, E: float, nu: float, rho: float = 0.0):
+        super().__init__(rho)
+        self.E = E
+        self.nu = nu
+        E_val = self.E
+        nu_val = self.nu
+        G = E_val / (2 * (1 + nu_val))
+
+        delta = E_val / (1.0 + nu_val) / (1 - 2.0 * nu_val)
+        diag = (1.0 - nu_val) * delta
+        off_diag = nu_val * delta
 
         self.mat_modulus[0, 0] = diag
         self.mat_modulus[0, 1] = off_diag
@@ -145,19 +151,38 @@ class IsotropicMaterial(Material):
     @classmethod
     def from_dict(cls, d: dict):
         """Deserialize from dict."""
-        mat_mechanic_prop = [d["E"], d["nu"]]
-        return cls(mat_mechanic_prop, d["rho"])
+        return cls(d["E"], d["nu"], d["rho"])
+
 
 class OrthotropicMaterial(Material):
     """Orthotropic material."""
-    def __init__(self, E, G, nu, rho=0.0):
+
+    def __init__(
+        self,
+        E1: float,
+        E2: float,
+        E3: float,
+        G12: float,
+        G13: float,
+        G23: float,
+        nu12: float,
+        nu13: float,
+        nu23: float,
+        rho: float = 0.0,
+    ):
         super().__init__(rho)
-        self.E = np.array(E)
-        self.G = np.array(G)
-        self.nu = np.array(nu)
-        e_xx, e_yy, e_zz = self.E
-        g_yz, g_xz, g_xy = self.G
-        nu_zy, nu_zx, nu_xy = self.nu
+        self.E1 = E1
+        self.E2 = E2
+        self.E3 = E3
+        self.G12 = G12
+        self.G13 = G13
+        self.G23 = G23
+        self.nu12 = nu12
+        self.nu13 = nu13
+        self.nu23 = nu23
+        e_xx, e_yy, e_zz = self.E1, self.E2, self.E3
+        g_yz, g_xz, g_xy = self.G23, self.G13, self.G12
+        nu_zy, nu_zx, nu_xy = self.nu23, self.nu13, self.nu12
 
         nu_yx = e_yy * nu_xy / e_xx
         nu_xz = e_xx * nu_zx / e_zz
@@ -204,9 +229,15 @@ class OrthotropicMaterial(Material):
         """Serialize to dict."""
         return {
             "type": "orthotropic",
-            "E": self.E.tolist(),
-            "G": self.G.tolist(),
-            "nu": self.nu.tolist(),
+            "E1": self.E1,
+            "E2": self.E2,
+            "E3": self.E3,
+            "G12": self.G12,
+            "G13": self.G13,
+            "G23": self.G23,
+            "nu12": self.nu12,
+            "nu13": self.nu13,
+            "nu23": self.nu23,
             "rho": self.rho,
         }
 
@@ -214,14 +245,22 @@ class OrthotropicMaterial(Material):
     def from_dict(cls, d: dict):
         """Deserialize from dict."""
         return cls(
-            np.array(d["E"]),
-            np.array(d["G"]),
-            np.array(d["nu"]),
+            d["E1"],
+            d["E2"],
+            d["E3"],
+            d["G12"],
+            d["G13"],
+            d["G23"],
+            d["nu12"],
+            d["nu13"],
+            d["nu23"],
             d["rho"],
         )
 
+
 class ElasticModulus(UserExpression):
     """Elastic modulus expression."""
+
     def __init__(
         self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
     ):
@@ -243,8 +282,10 @@ class ElasticModulus(UserExpression):
     def value_shape(self):
         return (36,)
 
+
 class RotatedStressElasticModulus(UserExpression):
     """Rotated stress elastic modulus expression."""
+
     def __init__(
         self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
     ):
@@ -266,8 +307,10 @@ class RotatedStressElasticModulus(UserExpression):
     def value_shape(self):
         return (36,)
 
+
 class TransformationMatrix(UserExpression):
     """Transformation matrix expression."""
+
     def __init__(
         self, mats_library, material_id, plane_orientation, fiber_orientation, **kwargs
     ):
@@ -287,8 +330,10 @@ class TransformationMatrix(UserExpression):
     def value_shape(self):
         return (36,)
 
+
 class MaterialDensity(UserExpression):
     """Material density expression."""
+
     def __init__(self, mats_library, material_id, **kwargs):
         super().__init__(**kwargs)
         self.mats_library = mats_library

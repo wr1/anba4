@@ -34,7 +34,7 @@ def isotropic_test_data():
     plane_orientations.set_all(90.0)
 
     # Build material property library.
-    mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
+    mat1 = material.IsotropicMaterial(matMechanicProp[0], matMechanicProp[1], 1.0)
     matLibrary = [mat1]
 
     input_data = InputData(

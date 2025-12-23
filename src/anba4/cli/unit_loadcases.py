@@ -1,5 +1,4 @@
 import pyvista as pv
-import numpy as np
 from .. import stress_field, strain_field
 from ..io.export import dolfin_to_pyvista_mesh
 
