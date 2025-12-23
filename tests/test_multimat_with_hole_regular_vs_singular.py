@@ -1,7 +1,13 @@
 import pytest
 import numpy as np
 import dolfin
-from anba4 import *
+from anba4 import material
+from anba4.data.anba_model import initialize_anba_model
+from anba4.data.data_model import InputData
+from anba4.solvers.stiffness import compute_stiffness
+from anba4.solvers.inertia import compute_inertia
+from anba4.fea.chains import initialize_chains
+from anba4.fea.fe_functions import initialize_fe_functions
 
 
 def parse_matrix(ref_str):

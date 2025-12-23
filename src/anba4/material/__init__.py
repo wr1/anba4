@@ -1,10 +1,10 @@
 __all__ = [
-    'RotatedStressElasticModulus',
-    'ElasticModulus',
-    'MaterialDensity',
-    'TransformationMatrix',
-    'IsotropicMaterial',
-    'OrthotropicMaterial',
+    "RotatedStressElasticModulus",
+    "ElasticModulus",
+    "MaterialDensity",
+    "TransformationMatrix",
+    "IsotropicMaterial",
+    "OrthotropicMaterial",
 ]
 
 from .material_py import (

@@ -18,7 +18,12 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+from dolfin import (
+    Mesh,
+    MeshFunction,
+    MeshEditor,
+    MeshCoordinates,
+)
 import numpy as np
 from typing import Union, List
 from .. import material

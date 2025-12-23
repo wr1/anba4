@@ -1,6 +1,5 @@
 from pydantic import BaseModel
 from typing import Any, List, Optional, Union
-from dolfin import *
 
 
 class IsotropicMaterialData(BaseModel):

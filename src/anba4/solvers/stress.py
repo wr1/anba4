@@ -21,7 +21,7 @@
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+from dolfin import Function, split
 from petsc4py import PETSc
 
 from ..utils import Sigma, RotatedSigma, local_project
