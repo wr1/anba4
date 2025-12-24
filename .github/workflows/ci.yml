@@ -30,7 +30,7 @@ jobs:
     - name: Ensure libmvec is present
       run:  sudo apt-get update && sudo apt-get install -y build-essential gcc g++ pkg-config && sudo apt-get install -y libblas-dev liblapack-dev
     - name: Install package
-      run: pip install -e .
+      run: conda update gcc_linux-64 gxx_linux-64 binutils_linux-64 binutils_linux-64 libgcc-ng && pip install -e .
 
     - name: Run tests
       run: pytest tests/ -v
