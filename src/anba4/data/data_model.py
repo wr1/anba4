@@ -1,16 +1,38 @@
 from pydantic import BaseModel
-from typing import Any, List, Optional
-from dolfin import *
+from typing import Any, List, Optional, Union
 
 
-class Material(BaseModel):
-    name: str
-    E: float  # Young's modulus
-    nu: float  # Poisson's ratio
-    density: float  # Density of the material
-    fiber_orientation: List[float]  # Fiber orientation in Voigt notation
-    plane_orientation: List[float]  # Plane orientation in Voigt notation
-    scaling_constraint: float = 1.0  # Scaling constraint for the material
+class IsotropicMaterialData(BaseModel):
+    type: str = "isotropic"
+    E: float
+    nu: float
+    rho: float = 0.0
+
+
+class OrthotropicMaterialData(BaseModel):
+    type: str = "orthotropic"
+    E1: float
+    E2: float
+    E3: float
+    G12: float
+    G13: float
+    G23: float
+    nu12: float
+    nu13: float
+    nu23: float
+    rho: float = 0.0
+
+
+class SerializableInputData(BaseModel):
+    points: List[List[float]]
+    cells: List[List[int]]
+    degree: int
+    mat_library: List[Union[IsotropicMaterialData, OrthotropicMaterialData]]
+    material_ids: List[int]
+    fiber_orientations: List[float]
+    plane_orientations: List[float]
+    scaling_constraint: float = 1.0
+    singular: bool = False
 
 
 class MaterialData(BaseModel):
@@ -18,18 +40,6 @@ class MaterialData(BaseModel):
     RotatedStress_modulus: Optional[Any] = None
     MaterialRotation_matrix: Optional[Any] = None
     density: Optional[Any] = None
-
-
-class SerializableInputData(BaseModel):
-    points: List[List[float]]
-    cells: List[List[int]]
-    degree: int
-    mat_library: List[dict]
-    material_ids: List[int]
-    fiber_orientations: List[float]
-    plane_orientations: List[float]
-    scaling_constraint: float = 1.0
-    singular: bool = False
 
 
 class InputData(BaseModel):

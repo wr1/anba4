@@ -5,43 +5,38 @@
 #
 #    This file is part of Anba.
 #
-#    Anba is free software: you can redistribute it and/or modify
-#    it under the terms of the GNU General Public License as published by
-#    the Free Software Foundation, either version 3 of the License, or
-#    (at your option) any later version.
-#
 #    Anba is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
-#
 # ----------------------------------------------------------------------
 #
 
 import dolfin
-import anba4
 import mshr
-from anba4.io.export import export_model_vtu, export_model_json
+from anba4 import (
+    material,
+    InputData,
+    initialize_anba_model,
+    initialize_fe_functions,
+    initialize_chains,
+    compute_stiffness,
+    compute_inertia,
+)
 
-
+# Basic material parameters
 dolfin.parameters["form_compiler"]["optimize"] = True
 dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
-
-# Basic material parameters. 9 is needed for orthotropic materials.
-
 E = 1.0
 nu = 0.33
-# Assmble into material mechanical property Matrix.
-matMechanicProp = [E, nu]
-# Meshing domain.
-
 thickness = 0.1
+
+# Meshing domain
 Square1 = mshr.Rectangle(dolfin.Point(0.0, -1.0, 0.0), dolfin.Point(1.0, 1.0, 0.0))
 Square2 = mshr.Rectangle(
-    dolfin.Point(thickness, -1 + thickness, 0), dolfin.Point(2.0, 1.0 - thickness, 0)
+    dolfin.Point(thickness, -1 + thickness, 0),
+    dolfin.Point(2.0, 1.0 - thickness, 0),
 )
 C_shape = Square1 - Square2
 mesh = mshr.generate_mesh(C_shape, 64)
@@ -55,64 +50,31 @@ materials.set_all(0)
 fiber_orientations.set_all(0.0)
 plane_orientations.set_all(90.0)
 
-# Build material property library.
-mat1 = anba4.material.IsotropicMaterial(matMechanicProp, 1.0)
+# Build material property library
+mat1 = material.IsotropicMaterial(E, nu, 1.0)
+matLibrary = [mat1]
 
-matLibrary = []
-matLibrary.append(mat1)
-
-
-export_model_vtu(
-    mesh, materials, fiber_orientations, plane_orientations, mesh_name="mesh.vtu"
-)
-
-input_data = anba4.InputData(
+# Create input data
+input_data = InputData(
     mesh=mesh,
     degree=2,
     matLibrary=matLibrary,
     materials=materials,
-    plane_orientations=plane_orientations,
     fiber_orientations=fiber_orientations,
+    plane_orientations=plane_orientations,
 )
-export_model_json(input_data, "mesh.json")
 
-anbax_data = anba4.initialize_anba_model(input_data)
-anba4.initialize_fe_functions(anbax_data)
-anba4.initialize_chains(anbax_data)
-stiff = anba4.compute_stiffness(anbax_data)
-stiff.view()
+# Initialize model
+anbax_data = initialize_anba_model(input_data)
+initialize_fe_functions(anbax_data)
+initialize_chains(anbax_data)
 
-mass = anba4.compute_inertia(anbax_data)
-mass.view()
+# Compute stiffness and mass
+stiff = compute_stiffness(anbax_data)
+mass = compute_inertia(anbax_data)
 
-output_file = "anbax_C_section.xdmf"
-stress_result_file = dolfin.XDMFFile(output_file)
-stress_result_file.parameters["functions_share_mesh"] = True
-stress_result_file.parameters["rewrite_function_mesh"] = False
-stress_result_file.parameters["flush_output"] = True
-
-stress = anba4.stress_field(
-    anbax_data,
-    [
-        1.0,
-        0.0,
-        0.0,
-    ],
-    [0.0, 0.0, 0.0],
-    "local",
-    "paraview",
-)
-strain = anba4.strain_field(
-    anbax_data,
-    [
-        1.0,
-        0.0,
-        0.0,
-    ],
-    [0.0, 0.0, 0.0],
-    "local",
-    "paraview",
-)
-stress_result_file.write(stress, t=0.0)
-stress_result_file.write(strain, t=1.0)
-print(f"Stress and strain fields written to {output_file}")
+# Print results
+print("Stiffness matrix:")
+print(stiff.getValues(range(6), range(6)))
+print("Mass matrix:")
+print(mass.getValues(range(6), range(6)))

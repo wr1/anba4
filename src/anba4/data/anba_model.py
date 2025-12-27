@@ -15,13 +15,15 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU General Public License for more details.
 #
-#    You should have received a copy of the GNU General Public License
-#    along with Anba.  If not, see <https://www.gnu.org/licenses/>.
-#
 # ----------------------------------------------------------------------
 #
 
-from dolfin import *
+from dolfin import (
+    Mesh,
+    MeshFunction,
+    MeshEditor,
+    MeshCoordinates,
+)
 import numpy as np
 from typing import Union, List
 from .. import material
@@ -33,6 +35,8 @@ from .data_model import (
     OutputData,
     MaterialData,
     SerializableInputData,
+    IsotropicMaterialData,
+    OrthotropicMaterialData,
 )
 
 
@@ -60,12 +64,25 @@ def initialize_anba_model(
         # Reconstruct matLibrary from dicts
         matLibrary: List[material.Material] = []
         for md in input_data.mat_library:
-            if md["type"] == "isotropic":
-                matLibrary.append(material.IsotropicMaterial.from_dict(md))
-            elif md["type"] == "orthotropic":
-                matLibrary.append(material.OrthotropicMaterial.from_dict(md))
+            if isinstance(md, IsotropicMaterialData):
+                matLibrary.append(material.IsotropicMaterial(md.E, md.nu, md.rho))
+            elif isinstance(md, OrthotropicMaterialData):
+                matLibrary.append(
+                    material.OrthotropicMaterial(
+                        md.E1,
+                        md.E2,
+                        md.E3,
+                        md.G12,
+                        md.G13,
+                        md.G23,
+                        md.nu12,
+                        md.nu13,
+                        md.nu23,
+                        md.rho,
+                    )
+                )
             else:
-                raise ValueError(f"Unknown material type: {md['type']}")
+                raise ValueError(f"Unknown material type: {md}")
 
         # Create MeshFunctions
         materials = MeshFunction("size_t", mesh, mesh.topology().dim())

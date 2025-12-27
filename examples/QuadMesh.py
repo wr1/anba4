@@ -1,238 +1,78 @@
-# import dolfin as df
-import numpy as np
+#
+# Copyright (C) 2018 Marco Morandini
+#
+# ----------------------------------------------------------------------
+#
+#    This file is part of Anba.
+#
+#    Anba is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+# ----------------------------------------------------------------------
+#
 
-# from anba4 import *
 import dolfin
-import anba4
+from anba4 import (
+    material,
+    InputData,
+    initialize_anba_model,
+    initialize_fe_functions,
+    initialize_chains,
+    compute_stiffness,
+    compute_inertia,
+)
 
-
-def build_mesh():
-    width = 0.48
-    height = 0.24
-    thick = 0.05
-
-    w2 = width / 2.0
-    h2 = height / 2.0
-
-    nnodes = 0
-
-    nodex = []
-    nodey = []
-    nid = []
-
-    nodex.append([])
-    nodey.append([])
-    nid.append([])
-
-    nodex[0].append(-w2)
-    nodey[0].append(-h2)
-    nid[0].append(nnodes)
-    nnodes = nnodes + 1
-
-    nodex[0].append(nodex[0][0] + thick)
-    nodey[0].append(-h2)
-    nid[0].append(nnodes)
-    nnodes = nnodes + 1
-
-    nnnodes_x = 11
-    l = 0.48 - 2 * thick
-    dx = l / (nnnodes_x - 3)
-    for i in range(nnnodes_x - 3):
-        nodex[0].append(nodex[0][i + 1] + dx)
-        nodey[0].append(-h2)
-        nid[0].append(nnodes)
-        nnodes = nnodes + 1
-    nodex[0].append(w2)
-    nodey[0].append(-h2)
-    nid[0].append(nnodes)
-    nnodes = nnodes + 1
-
-    nodex.append([])
-    nodey.append([])
-    nid.append([])
-    nodex[1] = nodex[0]
-    for i in range(len(nodey[0])):
-        nodey[1].append(nodey[0][i] + 0.05)
-        nid[1].append(nnodes)
-        nnodes = nnodes + 1
-
-    elcon = []
-    for i in range(10):
-        elcon.append([nid[0][i], nid[0][i + 1], nid[1][i], nid[1][i + 1]])
-
-    nnodesy = 4
-    dy = (height - 2 * thick) / nnodesy
-    for i in range(nnodesy - 1):
-        nodex.append([])
-        nodey.append([])
-        nid.append([])
-        for j in range(2):
-            nodex[2 + i].append(nodex[1 + i][j])
-            nodey[2 + i].append(nodey[1 + i][j] + dy)
-            nid[2 + i].append(nnodes)
-            nnodes = nnodes + 1
-        elcon.append([nid[1 + i][0], nid[1 + i][1], nid[2 + i][0], nid[2 + i][1]])
-        for j in range(2, 0, -1):
-            nodex[2 + i].append(nodex[1 + i][len(nodex[1 + i]) - j])
-            nodey[2 + i].append(nodey[1 + i][len(nodex[1 + i]) - j] + dy)
-            nid[2 + i].append(nnodes)
-            nnodes = nnodes + 1
-        elcon.append(
-            [
-                nid[1 + i][len(nodex[1 + i]) - 2],
-                nid[1 + i][len(nodex[1 + i]) - 1],
-                nid[2 + i][len(nodex[2 + i]) - 2],
-                nid[2 + i][len(nodex[2 + i]) - 1],
-            ]
-        )
-
-    nodex.append(nodex[0])
-    nodey.append([])
-    nid.append([])
-    for i in range(len(nodey[0])):
-        nodey[len(nodey) - 1].append(h2 - thick)
-        nid[len(nodey) - 1].append(nnodes)
-        nnodes = nnodes + 1
-
-    elcon.append(
-        [
-            nid[len(nodey) - 2][0],
-            nid[len(nodey) - 2][1],
-            nid[len(nodey) - 1][0],
-            nid[len(nodey) - 1][1],
-        ]
-    )
-    elcon.append(
-        [
-            nid[len(nodey) - 2][len(nodex[len(nodey) - 2]) - 2],
-            nid[len(nodey) - 2][len(nodex[len(nodey) - 2]) - 1],
-            nid[len(nodey) - 1][len(nodex[len(nodey) - 1]) - 2],
-            nid[len(nodey) - 1][len(nodex[len(nodey) - 1]) - 1],
-        ]
-    )
-
-    nodex.append(nodex[0])
-    nodey.append([])
-    nid.append([])
-    for i in range(len(nodey[0])):
-        nodey[len(nodey) - 1].append(h2)
-        nid[len(nodey) - 1].append(nnodes)
-        nnodes = nnodes + 1
-    for i in range(10):
-        elcon.append(
-            [
-                nid[len(nodey) - 2][i],
-                nid[len(nodey) - 2][i + 1],
-                nid[len(nodey) - 1][i],
-                nid[len(nodey) - 1][i + 1],
-            ]
-        )
-
-    mesh = dolfin.Mesh()
-    me = dolfin.MeshEditor()
-    me.open(mesh, "quadrilateral", 2, 2)
-
-    me.init_vertices(nnodes)
-    for i in range(len(nid)):
-        for j in range(len(nid[i])):
-            me.add_vertex(nid[i][j], (nodex[i][j], nodey[i][j]))
-
-    me.init_cells(len(elcon))
-    for i in range(len(elcon)):
-        me.add_cell(i, elcon[i])
-
-    me.close()
-
-    for i in range(len(nid)):
-        for j in range(len(nid[i])):
-            print(nid[i][j] + 1, ", ", nodex[i][j], ", ", nodey[i][j])
-    for i in range(len(elcon)):
-        print(
-            i + 1,
-            ", 200, 2, 2, ",
-            elcon[i][0] + 1,
-            ", ",
-            elcon[i][1] + 1,
-            ", ",
-            elcon[i][3] + 1,
-            ", ",
-            elcon[i][2] + 1,
-        )
-
-    return mesh
-
-
+# Basic material parameters
 dolfin.parameters["form_compiler"]["optimize"] = True
-dolfin.parameters["form_compiler"]["cpp_optimize_flags"] = "-O2"
 dolfin.parameters["form_compiler"]["quadrature_degree"] = 2
+E = 1.0
+nu = 0.33
 
-# Basic material parameters. 9 is needed for orthotropic materials.
-
-e_xx = 9.8e9
-e_yy = 9.8e9
-e_zz = 1.42e11
-g_xy = 4.8e9
-g_xz = 6.0e9
-g_yz = 6.0e9
-nu_xy = 0.34
-nu_zx = 0.3
-nu_zy = 0.3
-
-mesh = build_mesh()
+# Meshing domain
+mesh = dolfin.RectangleMesh(
+    dolfin.Point(0.0, 0.0),
+    dolfin.Point(1.0, 1.0),
+    10,
+    10,
+    "crossed",
+)
 
 # CompiledSubDomain
 materials = dolfin.MeshFunction("size_t", mesh, mesh.topology().dim())
 fiber_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
 plane_orientations = dolfin.MeshFunction("double", mesh, mesh.topology().dim())
-tol = 1e-14
 
-
-# Rotate mesh.
-theta = 23.0  # 0.0
-rotation_angle = 0.0
 materials.set_all(0)
-fiber_orientations.set_all(theta)
-plane_orientations.set_all(rotation_angle)
+fiber_orientations.set_all(0.0)
+plane_orientations.set_all(90.0)
 
+# Build material property library
+mat1 = material.IsotropicMaterial(E, nu, 1.0)
+matLibrary = [mat1]
 
-# rotate mesh.
-rotate = dolfin.Expression(
-    (
-        "x[0] * (cos(rotation_angle)-1.0) - x[1] * sin(rotation_angle)",
-        "x[0] * sin(rotation_angle) + x[1] * (cos(rotation_angle)-1.0)",
-    ),
-    rotation_angle=rotation_angle * np.pi / 180.0,
-    degree=1,
-)
-
-dolfin.ALE.move(mesh, rotate)
-
-# Build material property library.
-E = [e_xx, e_yy, e_zz]
-G = [g_yz, g_xz, g_xy]
-nu = [nu_zy, nu_zx, nu_xy]
-mat1 = anba4.material.OrthotropicMaterial(E, G, nu)
-
-matLibrary = []
-matLibrary.append(mat1)
-
-
-# print(mesh)
-
-input_data = anba4.InputData(
+# Create input data
+input_data = InputData(
     mesh=mesh,
-    degree=1,
+    degree=2,
     matLibrary=matLibrary,
     materials=materials,
-    plane_orientations=plane_orientations,
     fiber_orientations=fiber_orientations,
-    scaling_constraint=1.0e9,
+    plane_orientations=plane_orientations,
 )
 
+# Initialize model
+anbax_data = initialize_anba_model(input_data)
+initialize_fe_functions(anbax_data)
+initialize_chains(anbax_data)
 
-anbax_data = anba4.initialize_anba_model(input_data)
+# Compute stiffness and mass
+stiff = compute_stiffness(anbax_data)
+mass = compute_inertia(anbax_data)
 
-anba4.initialize_fe_functions(anbax_data)
-anba4.initialize_chains(anbax_data)
-stiff = anba4.compute_stiffness(anbax_data)
-stiff.view()
+# Print results
+print("Stiffness matrix:")
+print(stiff.getValues(range(6), range(6)))
+print("Mass matrix:")
+print(mass.getValues(range(6), range(6)))

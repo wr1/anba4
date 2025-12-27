@@ -1,7 +1,13 @@
 import pytest
 import numpy as np
 import dolfin
-from anba4 import *
+from anba4 import material
+from anba4.data.anba_model import initialize_anba_model
+from anba4.data.data_model import InputData
+from anba4.solvers.stiffness import compute_stiffness
+from anba4.solvers.inertia import compute_inertia
+from anba4.fea.chains import initialize_chains
+from anba4.fea.fe_functions import initialize_fe_functions
 
 
 def parse_matrix(ref_str):
@@ -42,9 +48,9 @@ def multimat_with_hole_data():
     plane_orientations.set_all(rotation_angle)
     lower_portion.mark(materials, 1)
     hole.mark(materials, 2)
-    mat1 = material.IsotropicMaterial(matMechanicProp1)
-    mat2 = material.IsotropicMaterial(matMechanicProp2)
-    mat3 = material.IsotropicMaterial(matMechanicProp3)
+    mat1 = material.IsotropicMaterial(matMechanicProp1[0], matMechanicProp1[1])
+    mat2 = material.IsotropicMaterial(matMechanicProp2[0], matMechanicProp2[1])
+    mat3 = material.IsotropicMaterial(matMechanicProp3[0], matMechanicProp3[1])
     matLibrary = [mat1, mat2, mat3]
 
     # Regular

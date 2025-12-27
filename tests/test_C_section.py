@@ -1,8 +1,14 @@
 import pytest
 import numpy as np
 import dolfin
-from anba4 import *
+from anba4 import material, utils
+from anba4.data.anba_model import initialize_anba_model
+from anba4.data.data_model import InputData
+from anba4.solvers.stiffness import compute_stiffness
+from anba4.solvers.inertia import compute_inertia
 import mshr
+from anba4.fea.chains import initialize_chains
+from anba4.fea.fe_functions import initialize_fe_functions
 
 
 def parse_matrix(ref_str):
@@ -32,7 +38,7 @@ def c_section_data():
     materials.set_all(0)
     fiber_orientations.set_all(0.0)
     plane_orientations.set_all(90.0)
-    mat1 = material.IsotropicMaterial(matMechanicProp, 1.0)
+    mat1 = material.IsotropicMaterial(matMechanicProp[0], matMechanicProp[1], 1.0)
     matLibrary = [mat1]
 
     # Regular
@@ -41,8 +47,8 @@ def c_section_data():
         degree=2,
         matLibrary=matLibrary,
         materials=materials,
-        plane_orientations=plane_orientations,
         fiber_orientations=fiber_orientations,
+        plane_orientations=plane_orientations,
         singular=False,
     )
     anbax_data_reg = initialize_anba_model(input_data_reg)
@@ -61,8 +67,8 @@ def c_section_data():
         degree=2,
         matLibrary=matLibrary,
         materials=materials,
-        plane_orientations=plane_orientations,
         fiber_orientations=fiber_orientations,
+        plane_orientations=plane_orientations,
         singular=True,
     )
     anbax_data_sing = initialize_anba_model(input_data_sing)
